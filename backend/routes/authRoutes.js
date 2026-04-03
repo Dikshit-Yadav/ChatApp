@@ -1,5 +1,5 @@
 import express from "express";
-import { register, login, forgetPassword, resetPassword, logout, googleCallback } from "../controller/authController.js";
+import { register, login, forgetPassword, resetPassword, logout, googleCallback, sendOtp, verifyOtp} from "../controller/authController.js";
 import passport from "passport";
 
 
@@ -13,6 +13,8 @@ router.get("/google",
 router.get("/google/callback",
     passport.authenticate('google', { session: false }), googleCallback)
 router.post("/register", register);
+router.post("/send-otp", sendOtp);
+router.post("/verify", verifyOtp);
 router.post("/login", login);
 router.post("/forget-password", forgetPassword);
 router.post("/reset-password", resetPassword);
