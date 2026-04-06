@@ -6,6 +6,8 @@ import sessionMiddleware from "./middleware/session.js";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import invitationRoutes from "./routes/invitationRoutes.js";
+import conversationRoutes from "./routes/conversationRoutes.js";
+import messageRoute from "./routes/messageRouter.js";
 
 
 const app = express();
@@ -23,6 +25,8 @@ app.use(passport.session());
 app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
 app.use("/invite", invitationRoutes)
+app.use("/conversations",conversationRoutes);
+app.use("/message",messageRoute);
 
 app.get("/", (req, res) => {
     res.send("Hello server");

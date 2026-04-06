@@ -19,14 +19,29 @@ export const API_ENDPOINTS = {
   },
   USER: {
     SEARCH_FRIENDS: "/user/search",
-    GET_REQUESTS: "/user/requests",
+    GET_FRIENDS: "/user/friends",
     RESPOND_INVITE: "/invite/respond",
   },
   INVITE: {
     RESPOND: "/invite/respond",
     SEND: "/invite/send",
     GET: "/invite",
-  }
+  },
+  CONVERSATION: {
+    GET_ALL: "/conversations",
+    CREATE_PRIVATE: "/conversations",
+    DELETE_PRIVATE: (conversationId) => `/conversations/${conversationId}`,
+    CREATE_GROUP: "/conversations/group",
+    GET_GROUP: (conversationId) => `/conversations/group/${conversationId}`,
+    UPDATE_GROUP_NAME: (conversationId) => `/conversations/group/${conversationId}`,
+    DELETE_GROUP: (conversationId) => `/conversations/group/${conversationId}`,
+    ADD_MEMBER: "/conversations/group/add-member",
+  },
+  MESSAGE: {
+    SEND_TEXT: "/message",
+    GET_BY_CONVERSATION: (conversationId) => `/message/${conversationId}`,
+    UPLOAD_FILE: "/message/upload",
+  },
 };
 
 export default api;

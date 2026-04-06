@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
 import { searchUsers } from "../services/userAPI";
 import { sendInvite, getInvitations, respondInvite } from "../services/invitationAPI";
+import { socket } from "../contex/socket";
+import toast from "react-hot-toast";
 
 export default function AddFriend() {
     const [search, setSearch] = useState("");
@@ -9,9 +11,26 @@ export default function AddFriend() {
     const [loading, setLoading] = useState(false);
     const [requests, setRequests] = useState<any[]>([]);
 
+    // Get current logged-in user info
+    const loggedInUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const currentUserId = typeof loggedInUser === "string" ? loggedInUser : loggedInUser?._id;
+
+    useEffect(() => {
+        socket.on("new-invite", (data) => {
+            console.log("New request received", data);
+
+            setRequests((prev) => [data.invite, ...prev]);
+
+            toast(`${data.sender.username} sent you a request`);
+        });
+
+        return () => {
+            socket.off("new-invite");
+        };
+    }, []);
     useEffect(() => {
         const delay = setTimeout(() => {
-            if (search) handleSearch(search);
+            handleSearch(search);
         }, 400);
 
         return () => clearTimeout(delay);
@@ -46,8 +65,6 @@ export default function AddFriend() {
         }
     };
     const handleSearch = async (value: string) => {
-        setSearch(value);
-
         if (!value) {
             setUsers([]);
             return;
@@ -141,7 +158,7 @@ export default function AddFriend() {
                         placeholder="Search by username or phone"
                         className="flex-1 outline-none"
                         value={search}
-                        onChange={(e) => handleSearch(e.target.value)}
+                        onChange={(e) => setSearch(e.target.value)}
                     />
                 </div>
 
@@ -165,7 +182,7 @@ export default function AddFriend() {
                             <p className="text-xs text-gray-500 mb-3">{user.email}</p>
 
                             {/* invitation status */}
-                            {user.invitationStatus === "accepted" ? (
+                            {user.friends?.includes(currentUserId) ? (
                                 <button className="w-full bg-gray-400 text-white py-1 rounded-lg">
                                     Friends
                                 </button>

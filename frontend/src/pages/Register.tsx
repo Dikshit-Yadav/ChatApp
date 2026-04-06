@@ -28,7 +28,8 @@ export default function Register() {
         isEmailVerified,
       });
 
-      localStorage.setItem("user", JSON.stringify(res.data.user._id));
+      // localStorage.setItem("user", JSON.stringify(res.data.user._id));
+      localStorage.setItem("user", JSON.stringify(res.data.user));
 
       navigate("/chat");
 

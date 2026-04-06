@@ -44,16 +44,9 @@ export const sendInviteService = async (senderId, receiverId) => {
 
 // respond invite
 export const respondInviteService = async (invitationId, status) => {
-    const invite = await Invitation.findById(invitationId);
-    const user = await User.findById(invite.senderId);
-    const receiver = await User.findById(invite.receiverId);
-
-    user.friends.push(receiver._id);
-    receiver.friends.push(user._id);
-
-    await user.save();
-    await receiver.save();
-
+    const invite = await Invitation.findById(invitationId)
+        .populate("senderId", "_id username")
+        .populate("receiverId", "_id username");
 
     if (!invite) {
         throw new Error("Invite not found");
@@ -61,6 +54,19 @@ export const respondInviteService = async (invitationId, status) => {
 
     invite.status = status;
     await invite.save();
+
+    if (status === "accepted") {
+        const sender = await User.findById(invite.senderId._id);
+        const receiver = await User.findById(invite.receiverId._id);
+
+        if (!sender || !receiver) throw new Error("User not found");
+
+        if (!sender.friends.includes(receiver._id)) sender.friends.push(receiver._id);
+        if (!receiver.friends.includes(sender._id)) receiver.friends.push(sender._id);
+
+        await sender.save();
+        await receiver.save();
+    }
 
     return invite;
 };

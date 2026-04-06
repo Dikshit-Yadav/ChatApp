@@ -1,5 +1,7 @@
 import * as invitationService from "../services/invitationServices.js";
-
+import User from "../models/User.js";
+import { getIO } from "../server.js";
+import { getReceiverSocket } from "../socket/index.js";
 // send invite
 export const invite = async (req, res) => {
     try {
@@ -10,6 +12,25 @@ export const invite = async (req, res) => {
             senderId,
             receiverId
         );
+
+        const sender = await User.findById(senderId).select(
+            "username email profilePic"
+        );
+
+        const receiverSocket = getReceiverSocket(receiverId);
+        console.log("Receiver socket:", receiverSocket);
+
+        if (receiverSocket) {
+            const io = getIO();
+
+            io.to(receiverSocket).emit("new-invite", {
+                invite: {
+                    _id: invite._id,
+                    senderId: sender,
+                },
+                sender,
+            });
+        }
 
         res.json({ message: "Invitation sent", invite });
 
@@ -28,6 +49,16 @@ export const responseInvite = async (req, res) => {
             status
         );
 
+        const senderId = invite.senderId._id.toString();
+        const receiverSocket = getReceiverSocket(senderId);
+
+        if (receiverSocket) {
+            const io = getIO();
+            io.to(receiverSocket).emit("invite-response", {
+                status,
+                receiverId: req.session.user.id,
+            });
+        }
         res.json({
             message: `Invitation ${status}`,
             invite,

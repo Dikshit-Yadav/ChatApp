@@ -4,8 +4,8 @@ export const searchUsers = (search: string) => {
   return api.get(`${API_ENDPOINTS.USER.SEARCH_FRIENDS}?search=${search}`);
 };
 
-export const getRequests = () => {
-  return api.get(API_ENDPOINTS.USER.GET_REQUESTS);
+export const getFriends = () => {
+  return api.get(API_ENDPOINTS.USER.GET_FRIENDS);
 };
 
 export const respondInvite = (invitationId: string, status: string) => {

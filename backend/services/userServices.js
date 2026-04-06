@@ -32,10 +32,7 @@ export const searchUserService = async (search, userId) => {
 
 // get friends
 export const getFriendsService = async (userId) => {
-  const user = await User.findById({
-      receiverId: userId,
-      status: "pending",
-    }).populate(
+  const user = await User.findById(userId).populate(
     "friends",
     "username email profilePic"
   );
