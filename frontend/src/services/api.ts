@@ -16,6 +16,7 @@ export const API_ENDPOINTS = {
     SEND_OTP_FORGOT: "/auth/send-otp/forgot",
     VERIFY_OTP: "/auth/verify",
     RESET_PASSWORD: "/auth/reset-password",
+    LOGOUT: "/auth/logout",
   },
   USER: {
     SEARCH_FRIENDS: "/user/search",
@@ -29,7 +30,11 @@ export const API_ENDPOINTS = {
     GET: "/invite",
   },
   CONVERSATION: {
-   CREATE_OR_GET: "/conversation",
+  BASE: "/conversation",
+  CREATE_OR_GET: "/conversation",
+},
+  MESSAGES: {
+    BASE: "/message",
   },
 };
 

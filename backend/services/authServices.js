@@ -6,8 +6,12 @@ const otpStore = new Map();
 
 // register
 export const registerUser = async ({ username, email, phone, password }) => {
-    const user = await User.findOne({ email });
-    if (user) throw new Error("User already exists");
+    const existingUser = await User.findOne({ email });
+    if (existingUser) throw new Error("User already exists");
+
+    if (!password || password.length < 6) {
+        throw new Error("Password must be at least 6 characters");
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -23,7 +27,7 @@ export const registerUser = async ({ username, email, phone, password }) => {
 
 // login
 export const loginUser = async ({ email, password }) => {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("+password");
     if (!user) throw new Error("User not found");
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -32,12 +36,17 @@ export const loginUser = async ({ email, password }) => {
     return user;
 };
 
-// send otp
+// send registration otp
 export const sendOtpService = async (email) => {
     const user = await User.findOne({ email });
     if (user) throw new Error("User already exists");
 
-    const otp = Math.floor(100000 + Math.random() * 900000);
+    const existing = otpStore.get(email);
+    if (existing && Date.now() < existing.expiresAt) {
+        throw new Error("OTP already sent. Please wait before requesting again");
+    }
+
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
 
     otpStore.set(email, {
         otp,
@@ -47,8 +56,7 @@ export const sendOtpService = async (email) => {
     await sendEmail(
         email,
         "Your OTP Code",
-        `<h2>Email Verification</h2>
-         <h1>${otp}</h1>`
+        `<h2>Email Verification</h2><h1>${otp}</h1>`
     );
 
     return true;
@@ -59,12 +67,13 @@ export const verifyOtpService = async (email, otp) => {
     const record = otpStore.get(email);
 
     if (!record) throw new Error("No OTP found");
+
     if (Date.now() > record.expiresAt) {
         otpStore.delete(email);
         throw new Error("OTP expired");
     }
 
-    if (record.otp.toString() !== otp.toString()) {
+    if (record.otp !== otp.toString()) {
         throw new Error("Invalid OTP");
     }
 
@@ -72,9 +81,17 @@ export const verifyOtpService = async (email, otp) => {
     return true;
 };
 
-// forgot pass otp
+// send forgot password otp
 export const sendForgetOtpService = async (email) => {
-    const otp = Math.floor(100000 + Math.random() * 900000);
+    const user = await User.findOne({ email });
+    if (!user) throw new Error("No account found with this email");
+
+    const existing = otpStore.get(email);
+    if (existing && Date.now() < existing.expiresAt) {
+        throw new Error("OTP already sent. Please wait before requesting again");
+    }
+
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
 
     otpStore.set(email, {
         otp,
@@ -84,20 +101,27 @@ export const sendForgetOtpService = async (email) => {
     await sendEmail(
         email,
         "Forgot Password OTP",
-        `<h1>${otp}</h1>`
+        `<h2>Password Reset</h2><h1>${otp}</h1>`
     );
 
     return true;
 };
 
-// reset pass
+// reset password
 export const resetPasswordService = async (email, password) => {
+    if (!password || password.length < 6) {
+        throw new Error("Password must be at least 6 characters");
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await User.findOneAndUpdate({email}, {
-        password: hashedPassword,
-    });
+    const user = await User.findOneAndUpdate(
+        { email },
+        { password: hashedPassword },
+        { new: true }
+    );
+
+    if (!user) throw new Error("User not found");
 
     return true;
 };
-

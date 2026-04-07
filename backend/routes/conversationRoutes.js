@@ -1,25 +1,19 @@
 import express from "express";
-import { conversation, getConversations, deleteChat, createGroup, getGroup, updateGroupName, deleteGroup, addMember } from "../controller/conversationController.js";
+const router = express.Router();
+import * as conversationController from "../controller/conversationController.js";
 import { isAuthenticated } from "../middleware/authMiddleware.js";
 
-const router = express.Router();
+// Private chat
+router.get("/", isAuthenticated, conversationController.getConversations); // all conversations
+router.get("/:conversationId", isAuthenticated, conversationController.getConversationById); // single conversation
+router.post("/", isAuthenticated, conversationController.createOrGetPrivateChat); // create or get private chat
+router.delete("/:conversationId", isAuthenticated, conversationController.deleteChat);
 
-router.get("/:conversationId", isAuthenticated, getConversations);
-router.post("/", isAuthenticated, conversation);
-
-// private chat delete
-router.delete("/:conversationId", isAuthenticated, deleteChat);
-
-// create a new group
-router.post("/group", isAuthenticated, createGroup);
-// a specific group
-router.get("/group/:conversationId", isAuthenticated, getGroup);
-// update group name
-router.put("/group/:conversationId", isAuthenticated, updateGroupName);
-// delete a group
-router.delete("/group/:conversationId", isAuthenticated, deleteGroup);
-// Add member to a group
-router.post("/group/add-member", isAuthenticated, addMember);
-
+// Group chat
+router.post("/group", isAuthenticated, conversationController.createGroup);
+router.get("/group/:conversationId", isAuthenticated, conversationController.getGroup);
+router.put("/group/:conversationId", isAuthenticated, conversationController.updateGroupName);
+router.delete("/group/:conversationId", isAuthenticated, conversationController.deleteGroup);
+router.post("/group/add-member", isAuthenticated, conversationController.addMember);
 
 export default router;

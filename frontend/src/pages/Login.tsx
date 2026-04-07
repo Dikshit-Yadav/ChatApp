@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { loginUser } from "../services/authAPI";
+import {authApi} from "../services/authAPI"
 import { useNavigate } from "react-router-dom";
 
 export default function Login() {
@@ -18,7 +18,7 @@ export default function Login() {
   try {
     setLoading(true);
 
-    const res = await loginUser(form);
+    const res = await authApi.loginUser(form);
 
     localStorage.setItem("user", JSON.stringify(res.data.user));
 

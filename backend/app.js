@@ -26,7 +26,7 @@ app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
 app.use("/invite", invitationRoutes)
 app.use("/conversation",conversationRoutes);
-app.use("/messages",messageRoute);
+app.use("/message",messageRoute);
 
 app.get("/", (req, res) => {
     res.send("Hello server");

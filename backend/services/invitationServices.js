@@ -1,13 +1,20 @@
 import Invitation from "../models/Invitation.js";
 import User from "../models/User.js";
 
+// get invite by id
+export const getInviteById = async (invitationId) => {
+    return await Invitation.findById(invitationId)
+        .populate("senderId", "_id username")
+        .populate("receiverId", "_id username");
+};
+
 // send invite
 export const sendInviteService = async (senderId, receiverId) => {
-    if (senderId === receiverId) {
+    if (senderId.toString() === receiverId.toString()) {
         throw new Error("Cannot invite yourself");
     }
 
-    // check last rejected
+    // check 24hr cooldown after rejection
     const lastReject = await Invitation.findOne({
         senderId,
         receiverId,
@@ -17,40 +24,30 @@ export const sendInviteService = async (senderId, receiverId) => {
     if (lastReject) {
         const diff = Date.now() - new Date(lastReject.updatedAt).getTime();
         const hours = diff / (1000 * 60 * 60);
-
         if (hours < 24) {
             throw new Error(`You can send invite after ${Math.ceil(24 - hours)} hours`);
         }
     }
 
-    // check pending
+    // check already pending
     const existing = await Invitation.findOne({
         senderId,
         receiverId,
         status: "pending",
     });
+    if (existing) throw new Error("Already invited");
 
-    if (existing) {
-        throw new Error("Already invited");
-    }
-
-    const invite = await Invitation.create({
-        senderId,
-        receiverId,
-    });
-
+    const invite = await Invitation.create({ senderId, receiverId });
     return invite;
 };
 
-// respond invite
+// respond to invite
 export const respondInviteService = async (invitationId, status) => {
     const invite = await Invitation.findById(invitationId)
         .populate("senderId", "_id username")
         .populate("receiverId", "_id username");
 
-    if (!invite) {
-        throw new Error("Invite not found");
-    }
+    if (!invite) throw new Error("Invite not found");
 
     invite.status = status;
     await invite.save();
@@ -61,8 +58,12 @@ export const respondInviteService = async (invitationId, status) => {
 
         if (!sender || !receiver) throw new Error("User not found");
 
-        if (!sender.friends.includes(receiver._id)) sender.friends.push(receiver._id);
-        if (!receiver.friends.includes(sender._id)) receiver.friends.push(sender._id);
+        if (!sender.friends.some(f => f.toString() === receiver._id.toString())) {
+            sender.friends.push(receiver._id);
+        }
+        if (!receiver.friends.some(f => f.toString() === sender._id.toString())) {
+            receiver.friends.push(sender._id);
+        }
 
         await sender.save();
         await receiver.save();
@@ -71,12 +72,10 @@ export const respondInviteService = async (invitationId, status) => {
     return invite;
 };
 
-// get invite
+// get pending invitations for a user
 export const getInvitationsService = async (userId) => {
-    const invites = await Invitation.find({
+    return await Invitation.find({
         receiverId: userId,
         status: "pending",
-    }).populate("senderId", "username email");
-
-    return invites;
+    }).populate("senderId", "username email profilePic");
 };

@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { verifyOtp } from "../services/authAPI";
+import { authApi } from "../services/authAPI";
 export default function Verify({ email, onClose, onVerified }: any) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const inputs = useRef<Array<HTMLInputElement | null>>([]);
@@ -20,7 +20,7 @@ export default function Verify({ email, onClose, onVerified }: any) {
     const code = otp.join("");
 
     try {
-      const data = await verifyOtp(email, code);
+      const data = await authApi.verifyOtp(email, code);
 
       if (!data){
         console.log("err on otp send")

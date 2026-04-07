@@ -2,83 +2,87 @@ import * as invitationService from "../services/invitationServices.js";
 import User from "../models/User.js";
 import { getIO } from "../server.js";
 import { getReceiverSocket } from "../socket/index.js";
+
 // send invite
 export const invite = async (req, res) => {
     try {
         const senderId = req.session.user.id;
         const { receiverId } = req.body;
 
-        const invite = await invitationService.sendInviteService(
-            senderId,
-            receiverId
-        );
+        if (!receiverId) {
+            return res.status(400).json({ message: "receiverId is required" });
+        }
 
-        const sender = await User.findById(senderId).select(
-            "username email profilePic"
-        );
+        const invite = await invitationService.sendInviteService(senderId, receiverId);
+
+        const sender = await User.findById(senderId).select("username email profilePic");
 
         const receiverSocket = getReceiverSocket(receiverId);
-        console.log("Receiver socket:", receiverSocket);
-
         if (receiverSocket) {
             const io = getIO();
-
             io.to(receiverSocket).emit("new-invite", {
-                invite: {
-                    _id: invite._id,
-                    senderId: sender,
-                },
+                invite: { _id: invite._id, senderId: sender },
                 sender,
             });
         }
 
-        res.json({ message: "Invitation sent", invite });
+        res.json({ message: "Invitation sent" });
 
     } catch (err) {
-        res.status(400).json({ message: err.message });
+        console.error(err);
+        res.status(err.status || 400).json({ message: err.message });
     }
 };
 
-// respond
+// respond to invite
 export const responseInvite = async (req, res) => {
     try {
         const { invitationId, status } = req.body;
+        const userId = req.session.user.id;
 
-        const invite = await invitationService.respondInviteService(
-            invitationId,
-            status
-        );
+        if (!invitationId) {
+            return res.status(400).json({ message: "invitationId is required" });
+        }
 
-        const senderId = invite.senderId._id.toString();
+        if (!["accepted", "rejected"].includes(status)) {
+            return res.status(400).json({ message: "Status must be accepted or rejected" });
+        }
+
+        const invite = await invitationService.getInviteById(invitationId);
+        if (!invite) return res.status(404).json({ message: "Invitation not found" });
+
+        if (invite.receiverId._id.toString() !== userId.toString()) {
+            return res.status(403).json({ message: "Unauthorized" });
+        }
+
+        const updatedInvite = await invitationService.respondInviteService(invitationId, status);
+
+        const senderId = updatedInvite.senderId._id.toString();
         const receiverSocket = getReceiverSocket(senderId);
-
         if (receiverSocket) {
             const io = getIO();
             io.to(receiverSocket).emit("invite-response", {
                 status,
-                receiverId: req.session.user.id,
+                receiverId: userId,
             });
         }
-        res.json({
-            message: `Invitation ${status}`,
-            invite,
-        });
+
+        res.json({ message: `Invitation ${status}`, invite: updatedInvite });
 
     } catch (err) {
-        res.status(400).json({ message: err.message });
+        console.error(err);
+        res.status(err.status || 400).json({ message: err.message });
     }
 };
 
-// get invites
+// get pending invitations
 export const getInvitations = async (req, res) => {
     try {
         const userId = req.session.user.id;
-
         const invites = await invitationService.getInvitationsService(userId);
-
         res.json(invites);
-
     } catch (err) {
-        res.status(500).json({ message: "Server error" });
+        console.error(err);
+        res.status(err.status || 500).json({ message: err.message || "Server error" });
     }
 };

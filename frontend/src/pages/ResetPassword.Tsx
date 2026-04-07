@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { resetPassword } from "../services/authAPI";
+import { authApi } from "../services/authAPI";
 
 export default function ResetPassword() {
     const [password, setPassword] = useState("");
@@ -11,7 +11,7 @@ export default function ResetPassword() {
 
     const handleReset = async () => {
         try {
-            const res = await resetPassword(email, password);
+            const res = await authApi.resetPassword(email, password);
 
             const data = res.data;
 

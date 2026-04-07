@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { registerUser, sendOtp } from "../services/authAPI";
+import { authApi} from "../services/authAPI";
 import { useNavigate } from "react-router-dom";
 import Otp from "../components/Otp";
 
@@ -23,7 +23,7 @@ export default function Register() {
     try {
       setLoading(true);
 
-      const res = await registerUser({
+      const res = await authApi.registerUser({
         ...form,
         isEmailVerified,
       });
@@ -77,7 +77,7 @@ export default function Register() {
                   try {
                     setIsVerifying(true);
 
-                    const res = await sendOtp(form.email);
+                    const res = await authApi.sendOtp(form.email);
 
                     console.log(res.data.message);
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Otp from "../components/Otp";
-import { sendOtpForgot } from "../services/authAPI";
+import { authApi } from "../services/authAPI";
 import { useNavigate } from "react-router-dom";
 export default function ForgotPassword() {
     const navigate = useNavigate();
@@ -12,7 +12,7 @@ export default function ForgotPassword() {
     try {
         setLoading(true);
 
-        const res = await sendOtpForgot(email);
+        const res = await authApi.sendOtpForgot(email);
 
         alert(res.data.message);
         setShowOtp(true);
