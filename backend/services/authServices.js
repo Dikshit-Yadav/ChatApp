@@ -47,7 +47,7 @@ export const sendOtpService = async (email) => {
     }
 
     const otp = String(Math.floor(100000 + Math.random() * 900000));
-
+    console.log(otp)
     otpStore.set(email, {
         otp,
         expiresAt: Date.now() + 5 * 60 * 1000,

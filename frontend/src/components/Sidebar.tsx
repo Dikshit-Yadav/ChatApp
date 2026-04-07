@@ -47,6 +47,7 @@ export default function Sidebar() {
         } catch (err) {
             console.error("Logout error:", err);
         } finally {
+            socket.disconnect();
             localStorage.removeItem("user");
             navigate("/login");
         }

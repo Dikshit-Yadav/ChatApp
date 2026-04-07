@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {authApi} from "../services/authAPI"
 import { useNavigate } from "react-router-dom";
+import { socket } from "../contex/socket";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ export default function Login() {
     const res = await authApi.loginUser(form);
 
     localStorage.setItem("user", JSON.stringify(res.data.user));
-
+    socket.connect();
     navigate("/chat");
 
   } catch (err: any) {

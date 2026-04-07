@@ -1,35 +1,46 @@
-let onlineUsers = new Map();
+const onlineUsers = new Map();
 
 export const initSocket = (io) => {
   io.on("connection", (socket) => {
     const user = socket.request.session?.user;
-
-    if (!user) {
-      console.log("No session user");
-      return;
-    }
+    if (!user) return socket.disconnect(true);
 
     const userId = user.id.toString();
+    const existing = onlineUsers.get(userId) || [];
+    onlineUsers.set(userId, [...existing, socket.id]);
 
-    onlineUsers.set(userId, socket.id);
-    console.log("User connected:", userId);
+    // Broadcast online users
+    io.emit("online-users", Array.from(onlineUsers.keys()));
 
+    // Join conversation
+    socket.on("join-conversation", ({ conversationId }) => socket.join(conversationId));
+    socket.on("leave-conversation", ({ conversationId }) => socket.leave(conversationId));
+
+    // Typing
+    socket.on("typing", ({ conversationId }) =>
+      socket.to(conversationId).emit("user-typing")
+    );
+    socket.on("stop-typing", ({ conversationId }) =>
+      socket.to(conversationId).emit("user-stop-typing")
+    );
+
+    // Disconnect
     socket.on("disconnect", () => {
-      onlineUsers.delete(userId);
-      console.log("User disconnected:", userId);
+      const sockets = (onlineUsers.get(userId) || []).filter((id) => id !== socket.id);
+      if (sockets.length > 0) onlineUsers.set(userId, sockets);
+      else onlineUsers.delete(userId);
+      io.emit("online-users", Array.from(onlineUsers.keys()));
     });
   });
 };
 
 export const getReceiverSocket = (userId) => {
-  return onlineUsers.get(userId.toString());
+    const sockets = onlineUsers.get(userId.toString());
+    return sockets?.[0] || null;
 };
 
-export const getOnlineUsers = () => {
-  
-  return onlineUsers;
+export const getReceiverSockets = (userId) => {
+    return onlineUsers.get(userId.toString()) || [];
 };
 
-export const setOnlineUsers = (users) => {
-  onlineUsers = users;
-};
+export const getOnlineUsers = () => Array.from(onlineUsers.keys());

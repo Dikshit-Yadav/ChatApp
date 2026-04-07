@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema(
         },
         profilePic: {
             type: String,
-            default: "",
+            default: "https://thumbs.dreamstime.com/b/default-avatar-profile-icon-vector-social-media-user-image-182145777.jpg"
         },
     },
     { timestamps: true }
