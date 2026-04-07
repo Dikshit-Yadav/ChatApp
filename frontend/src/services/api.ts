@@ -20,6 +20,7 @@ export const API_ENDPOINTS = {
   USER: {
     SEARCH_FRIENDS: "/user/search",
     GET_FRIENDS: "/user/friends",
+    GET_SUGGESTION: "/user/suggestion",
     RESPOND_INVITE: "/invite/respond",
   },
   INVITE: {
@@ -28,19 +29,7 @@ export const API_ENDPOINTS = {
     GET: "/invite",
   },
   CONVERSATION: {
-    GET_ALL: "/conversations",
-    CREATE_PRIVATE: "/conversations",
-    DELETE_PRIVATE: (conversationId) => `/conversations/${conversationId}`,
-    CREATE_GROUP: "/conversations/group",
-    GET_GROUP: (conversationId) => `/conversations/group/${conversationId}`,
-    UPDATE_GROUP_NAME: (conversationId) => `/conversations/group/${conversationId}`,
-    DELETE_GROUP: (conversationId) => `/conversations/group/${conversationId}`,
-    ADD_MEMBER: "/conversations/group/add-member",
-  },
-  MESSAGE: {
-    SEND_TEXT: "/message",
-    GET_BY_CONVERSATION: (conversationId) => `/message/${conversationId}`,
-    UPLOAD_FILE: "/message/upload",
+   CREATE_OR_GET: "/conversation",
   },
 };
 

@@ -8,5 +8,5 @@ export const createMessage = async (senderId, conversationId, message) => {
 // fetch messages
 export const getMessagesByConversation = async (conversationId) => {
     const messages = await Message.find({ conversationId });
-    return messages.sort((a, b) => a.createdAt - b.createdAt); // sort ascending
+    return messages.sort((a, b) => a.createdAt - b.createdAt); 
 };

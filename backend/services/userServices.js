@@ -41,3 +41,19 @@ export const getFriendsService = async (userId) => {
 
   return user.friends;
 };
+
+export const getSuggestionsService = async (userId) => {
+  const user = await User.findById(userId);
+
+  if (!user) throw new Error("User not found");
+
+  const excludeUsers = [...user.friends, userId];
+
+  const suggestions = await User.find({
+    _id: { $nin: excludeUsers }
+  })
+  .select("username email profilePic")
+  .limit(10);
+
+  return suggestions;
+};

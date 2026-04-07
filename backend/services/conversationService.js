@@ -4,13 +4,15 @@ import Conversation from "../models/Conversation.js";
 export const getOrCreatePrivateChat = async (userId, receiverId) => {
     let chat = await Conversation.findOne({
         members: { $all: [userId, receiverId] },
-    });
+    }).populate("members", "username profilePic");;
 
     if (!chat) {
         chat = await Conversation.create({
             members: [userId, receiverId],
             isGroup: false,
         });
+
+        chat = await Conversation.findById(chat._id).populate("members", "username profilePic");
     }
 
     return chat;

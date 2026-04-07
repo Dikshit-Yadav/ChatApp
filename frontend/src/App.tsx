@@ -7,7 +7,6 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ChatPage from "./pages/ChatPage";
 import AddFriend from "./pages/AddFriend";
-import MessagePage from "./pages/MessagePage";
 
 
 function App() {
@@ -15,16 +14,14 @@ function App() {
     <BrowserRouter>
       <Toaster position="top-right" />
       <Routes>
-
         <Route path="/" element={<Navigate to="/chat" />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgetpassword" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/add-friend" element={<AddFriend />} />
-        <Route path="/messages/:conversationId" element={<MessagePage />} />
         <Route
-          path="/chat"
+          path="/chat/*"
           element={
             <ProtectedRoute>
               <ChatPage />

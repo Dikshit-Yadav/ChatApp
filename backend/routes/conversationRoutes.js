@@ -4,8 +4,9 @@ import { isAuthenticated } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/", isAuthenticated, getConversations);
+router.get("/:conversationId", isAuthenticated, getConversations);
 router.post("/", isAuthenticated, conversation);
+
 // private chat delete
 router.delete("/:conversationId", isAuthenticated, deleteChat);
 

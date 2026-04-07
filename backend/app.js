@@ -25,8 +25,8 @@ app.use(passport.session());
 app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
 app.use("/invite", invitationRoutes)
-app.use("/conversations",conversationRoutes);
-app.use("/message",messageRoute);
+app.use("/conversation",conversationRoutes);
+app.use("/messages",messageRoute);
 
 app.get("/", (req, res) => {
     res.send("Hello server");

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
-import { searchUsers } from "../services/userAPI";
+import { searchUsers, getSuggestions } from "../services/userAPI";
 import { sendInvite, getInvitations, respondInvite } from "../services/invitationAPI";
 import { socket } from "../contex/socket";
 import toast from "react-hot-toast";
@@ -10,10 +10,24 @@ export default function AddFriend() {
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [requests, setRequests] = useState<any[]>([]);
+    const [suggestions, setSuggestions] = useState<any[]>([]);
 
-    // Get current logged-in user info
     const loggedInUser = JSON.parse(localStorage.getItem("user") || "{}");
     const currentUserId = typeof loggedInUser === "string" ? loggedInUser : loggedInUser?._id;
+
+
+    useEffect(() => {
+        fetchSuggestions();
+    }, []);
+
+    const fetchSuggestions = async () => {
+        try {
+            const res = await getSuggestions();
+            setSuggestions(res.data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     useEffect(() => {
         socket.on("new-invite", (data) => {
@@ -101,8 +115,12 @@ export default function AddFriend() {
             <Sidebar />
 
             <div className="flex-1 bg-gradient-to-br from-teal-100 to-slate-200 p-6 min-h-screen">
-
-                {/* friend requests */}
+                <h1 className="text-2xl font-bold text-gray-700 mb-1">
+                    Expand your circle.
+                </h1>
+                <p className="text-sm text-gray-500 mb-6">
+                    Search by username, phone, or email to find your people.
+                </p>
                 {requests.length > 0 && (
                     <>
                         <h3 className="text-gray-700 font-semibold mb-3">
@@ -151,7 +169,6 @@ export default function AddFriend() {
                     </>
                 )}
 
-                {/* rearch */}
                 <div className="bg-white rounded-full px-4 py-2 flex items-center shadow mb-6">
                     <input
                         type="text"
@@ -162,10 +179,8 @@ export default function AddFriend() {
                     />
                 </div>
 
-                {/* loading */}
                 {loading && <p>Searching...</p>}
 
-                {/* results */}
                 <div className="flex gap-6 flex-wrap">
                     {users.map((user) => (
                         <div
@@ -181,7 +196,6 @@ export default function AddFriend() {
                             <p className="font-medium">{user.username}</p>
                             <p className="text-xs text-gray-500 mb-3">{user.email}</p>
 
-                            {/* invitation status */}
                             {user.friends?.includes(currentUserId) ? (
                                 <button className="w-full bg-gray-400 text-white py-1 rounded-lg">
                                     Friends
@@ -202,6 +216,45 @@ export default function AddFriend() {
                         </div>
                     ))}
                 </div>
+
+                {suggestions.length > 0 && (
+                    <>
+                        <h3 className="text-gray-700 font-semibold mb-3">
+                            People You May Know
+                        </h3>
+
+                        <div className="flex gap-4 mb-6 flex-wrap">
+                            {suggestions.map((user) => (
+                                <div
+                                    key={user._id}
+                                    className="bg-white p-3 rounded-xl shadow flex items-center justify-between w-[280px]"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <img
+                                            src={user.profilePic || "https://i.pravatar.cc/40"}
+                                            className="w-10 h-10 rounded-full"
+                                        />
+                                        <div>
+                                            <p className="text-sm font-medium">
+                                                {user.username}
+                                            </p>
+                                            <p className="text-xs text-gray-500">
+                                                {user.email}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={() => handleSendInvite(user._id)}
+                                        className="bg-teal-600 text-white px-3 py-1 rounded"
+                                    >
+                                        + Add
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                )}
 
             </div>
         </div>

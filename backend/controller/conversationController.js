@@ -17,6 +17,14 @@ export const conversation = async (req, res) => {
 export const getConversations = async (req, res) => {
     try {
         const userId = req.session.user.id;
+        const conversationId = req.query.conversationId;
+
+        if (conversationId) {
+            const conversation = await conversationService.getGroupById(conversationId);
+            if (!conversation) return res.status(404).json({ message: "Conversation not found" });
+            if (!conversation.members.includes(userId)) return res.status(403).json({ message: "Unauthorized" });
+            return res.json(conversation);
+        }
         const conversations = await conversationService.getUserConversations(userId);
         res.json({ message: "conversations found", conversations });
     } catch (err) {

@@ -3,15 +3,16 @@ import * as fileService from "../services/fileServices.js";
 
 // send message
 export const sendMessage = async (req, res) => {
-    try {
-        const senderId = req.session.user.id;
-        const { conversationId, message } = req.body;
+  try {
+    const senderId = req.session.user.id;
+    const { conversationId } = req.params;
+    const { text } = req.body;
 
-        const msg = await messageService.createMessage(senderId, conversationId, message);
-        res.json(msg);
-    } catch (err) {
-        res.status(500).json({ message: "server error" });
-    }
+    const msg = await messageService.createMessage(senderId, conversationId, text);
+    res.json(msg);
+  } catch (err) {
+    res.status(500).json({ message: "server error" });
+  }
 };
 
 // get all messages

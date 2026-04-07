@@ -6,7 +6,7 @@
 
     const router = express.Router();
 
-    router.post("/",isAuthenticated,sendMessage);
+    router.post("/:conversationId",isAuthenticated,sendMessage);
     router.get("/:conversationId", isAuthenticated, getMessage);
     router.post("/upload", isAuthenticated, upload.single("file"),sendFile);
 

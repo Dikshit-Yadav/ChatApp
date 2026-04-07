@@ -1,20 +1,35 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { conversationApi } from "../services/conversationAPI";
 
 interface Message {
   _id: string;
-  sender: string;
-  text: string;
+  sender: {
+    _id: string;
+    username: string;
+    profilePic?: string;
+  };
+  message: string;
   createdAt: string;
+}
+
+interface User {
+  _id: string;
+  username: string;
+  profilePic?: string;
 }
 
 const ChatPanel = () => {
   const { conversationId } = useParams();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [conversationUser, setConversationUser] = useState<User | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const loggedInUserId = JSON.parse(localStorage.getItem("user") || "{}")._id;
+  console.log(loggedInUserId)
+
+  // fetch messages
   useEffect(() => {
     const fetchMessages = async () => {
       try {
@@ -24,11 +39,35 @@ const ChatPanel = () => {
         console.error("Error fetching messages", err);
       }
     };
-
     if (conversationId) fetchMessages();
   }, [conversationId]);
 
-  // Scroll to bottom when new message arrives
+  useEffect(() => {
+    const fetchConversationUser = async () => {
+      try {
+        const res = await conversationApi.getConversation(conversationId!);
+        const conversations = res.data.conversations;
+
+        if (conversations && conversations.length > 0) {
+          const conversation = conversations.find((c: any) => c._id === conversationId) || conversations[0];
+
+          if (conversation.members && conversation.members.length > 0) {
+            const otherUser = conversation.members.find((m: User) => m._id !== loggedInUserId);
+            setConversationUser(otherUser || null);
+          } else {
+            console.error("Conversation members not found in selected conversation:", conversation);
+          }
+        } else {
+          console.error("No conversations returned from API:", res.data);
+        }
+      } catch (err) {
+        console.error("Error fetching conversation info", err);
+      }
+    };
+
+    if (conversationId) fetchConversationUser();
+  }, [conversationId]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -36,9 +75,7 @@ const ChatPanel = () => {
   const handleSend = async () => {
     if (!newMessage.trim()) return;
     try {
-      const res = await conversationApi.sendMessage(conversationId!, {
-        text: newMessage,
-      });
+      const res = await conversationApi.sendMessage(conversationId!, { text: newMessage });
       setMessages((prev) => [...prev, res.data]);
       setNewMessage("");
     } catch (err) {
@@ -48,23 +85,47 @@ const ChatPanel = () => {
 
   return (
     <div className="flex-1 flex flex-col bg-white h-screen border-l border-gray-200">
-      {/* Messages Header */}
-      <div className="p-4 border-b border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-700">Chat</h3>
+      <div className="p-4 border-b border-gray-200 flex items-center gap-3">
+        {conversationUser && (
+          <>
+            <img
+              src={conversationUser.profilePic || "https://i.pravatar.cc/40"}
+              alt={conversationUser.username}
+              className="w-10 h-10 rounded-full"
+            />
+            <h3 className="text-lg font-semibold text-gray-700">
+              {conversationUser.username}
+            </h3>
+          </>
+        )}
       </div>
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
-        {messages.map((msg) => (
-          <div key={msg._id} className={`p-2 rounded-xl max-w-[70%] ${msg.sender === "me" ? "bg-teal-100 self-end" : "bg-gray-100 self-start"}`}>
-            <p className="text-sm text-gray-700">{msg.text}</p>
-            <span className="text-xs text-gray-400">{new Date(msg.createdAt).toLocaleTimeString()}</span>
+  {messages.map((msg) => {
+    const isMe = msg.senderId === loggedInUserId;
+    console.log(isMe)
+    return (
+      <div
+        key={msg._id}
+        className={`flex items-end gap-2 max-w-[70%] ${isMe ? "self-end flex-row-reverse" : "self-start"}`
+        }
+      >
+        <div className="flex flex-col">
+          <div className={`p-2 rounded-xl ${isMe ? "bg-teal-500 text-white" : "bg-gray-200 text-gray-800"}`}>
+            <p className="text-sm">{msg.message}</p>
           </div>
-        ))}
-        <div ref={messagesEndRef} />
+          <span className="text-xs text-gray-400 self-end">
+            {new Date(msg.createdAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+        </div>
       </div>
-
-      {/* Input Box */}
+    );
+  })}
+  <div ref={messagesEndRef} />
+</div>
       <div className="p-4 border-t border-gray-200 flex gap-2">
         <input
           type="text"

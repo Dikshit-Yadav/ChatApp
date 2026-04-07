@@ -15,7 +15,7 @@ const RightPanel = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"direct" | "groups">("direct");
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
-
+  const loggedInUserId = JSON.parse(localStorage.getItem("user") || "{}")._id;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,7 +25,6 @@ const RightPanel = () => {
         setFriends(
           res.data.map((f: Friend) => ({
             ...f,
-            unread: Math.floor(Math.random() * 3),
           }))
         );
       } catch (err) {
@@ -40,9 +39,12 @@ const RightPanel = () => {
 
   const handleFriendClick = async (friendId: string) => {
     try {
-      const res = await conversationApi.createPrivateConversation(friendId);
-      const conversation = res.data.data!;
-      navigate(`/messages/${conversation._id}`);
+      // Fetch or create private chat
+      const conversation = await conversationApi.createPrivateConversation(loggedInUserId, friendId);
+
+      if (conversation.data._id) {
+        navigate(`/chat/messages/${conversation.data._id}`); // include /chat prefix if ChatPage route is /chat
+      }
     } catch (err) {
       console.error("Error opening conversation:", err);
     }
@@ -68,22 +70,20 @@ const RightPanel = () => {
 
       <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-200">
         <button
-          className={`flex-1 text-sm font-medium pb-1 text-center rounded-md ${
-            activeTab === "direct"
-              ? "text-teal-600 border-b-2 border-teal-600"
-              : "text-gray-500 hover:text-teal-600 transition-colors"
-          }`}
+          className={`flex-1 text-sm font-medium pb-1 text-center rounded-md ${activeTab === "direct"
+            ? "text-teal-600 border-b-2 border-teal-600"
+            : "text-gray-500 hover:text-teal-600 transition-colors"
+            }`}
           onClick={() => setActiveTab("direct")}
         >
           Direct
         </button>
 
         <button
-          className={`flex-1 text-sm font-medium pb-1 text-center rounded-md ${
-            activeTab === "groups"
-              ? "text-teal-600 border-b-2 border-teal-600"
-              : "text-gray-500 hover:text-teal-600 transition-colors"
-          }`}
+          className={`flex-1 text-sm font-medium pb-1 text-center rounded-md ${activeTab === "groups"
+            ? "text-teal-600 border-b-2 border-teal-600"
+            : "text-gray-500 hover:text-teal-600 transition-colors"
+            }`}
           onClick={() => setActiveTab("groups")}
         >
           Groups

@@ -26,3 +26,15 @@ export const getFriends = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
+//suggestion friends
+export const getSuggestions = async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    const suggestions = await userService.getSuggestionsService(userId);
+
+    res.status(200).json(suggestions);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
