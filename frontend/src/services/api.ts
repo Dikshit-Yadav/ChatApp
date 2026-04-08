@@ -36,6 +36,11 @@ export const API_ENDPOINTS = {
   MESSAGES: {
     BASE: "/message",
   },
+  PROFILE: {
+    GET_PROFILE: "/profile",
+    UPDATE_PROFILE: "/profile",
+    DELETE_PROFILE: "/profile",
+  },
 };
 
 export default api;

@@ -112,8 +112,6 @@ export default function AddFriend() {
     return (
         <div className="flex">
 
-            <Sidebar />
-
             <div className="flex-1 bg-gradient-to-br from-teal-100 to-slate-200 p-6 min-h-screen">
                 <h1 className="text-2xl font-bold text-gray-700 mb-1">
                     Expand your circle.
@@ -131,7 +129,7 @@ export default function AddFriend() {
                             {requests.map((req) => (
                                 <div
                                     key={req._id}
-                                    className="bg-white p-3 rounded-xl shadow flex items-center justify-between w-[280px]"
+                                    className="bg-white p-3 rounded-xl shadow flex items-center justify-between w-[350px]"
                                 >
                                     <div className="flex items-center gap-3">
                                         <img
@@ -227,7 +225,7 @@ export default function AddFriend() {
                             {suggestions.map((user) => (
                                 <div
                                     key={user._id}
-                                    className="bg-white p-3 rounded-xl shadow flex items-center justify-between w-[280px]"
+                                    className="bg-white p-3 rounded-xl shadow flex items-center justify-between w-[380px]"
                                 >
                                     <div className="flex items-center gap-3">
                                         <img

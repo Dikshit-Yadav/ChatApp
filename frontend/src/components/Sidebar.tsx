@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 
 export default function Sidebar() {
     const userData = JSON.parse(localStorage.getItem("user") || "{}");
+    console.log(userData.profilePic)
     const profilePic = userData.profilePic;
     const navigate = useNavigate();
     const [requestCount, setRequestCount] = useState(0);
@@ -94,7 +95,7 @@ export default function Sidebar() {
                     src={profilePic || "https://i.pravatar.cc/40"}
                     alt="User Avatar"
                     className="w-10 h-10 rounded-full object-cover cursor-pointer ring-2 ring-teal-400"
-                    onClick={() => navigate("/profile")}
+                    onClick={() => navigate("/chat/profile")}
                 />
                 <button
                     onClick={handleLogout}
