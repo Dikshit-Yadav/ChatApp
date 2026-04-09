@@ -13,7 +13,7 @@ const sessionMiddleware = session({
         ttl: 24 * 60 * 60,
     }),
     cookie: {
-        secure: process.env.NODE_ENV,
+        secure: false,
         maxAge: 24 * 60 * 60 * 1000,
         httpOnly: true,
         sameSite: "lax",

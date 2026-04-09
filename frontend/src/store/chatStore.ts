@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { conversationApi } from "../services/conversationAPI";
 import { socket } from "../contex/socket";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface Message {
   _id: string;
@@ -42,6 +44,7 @@ export const useChatStore = create<ChatState>((set) => ({
       const res = await conversationApi.getMessages(conversationId);
       set({ messages: res.data });
     } catch (err) {
+      toast.error("Error fetching messages");
       console.error("Error fetching messages", err);
     }
   },
@@ -59,6 +62,7 @@ export const useChatStore = create<ChatState>((set) => ({
         set({ conversationUser: otherUser || null });
       }
     } catch (err) {
+      toast.error("Error fetching conversation");
       console.error("Error fetching conversation", err);
     }
   },
@@ -82,6 +86,7 @@ export const useChatStore = create<ChatState>((set) => ({
 
       socket.emit("stop-typing", { conversationId });
     } catch (err) {
+      toast.error("Error sending message");
       console.error("Error sending message", err);
     }
   },

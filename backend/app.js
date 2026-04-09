@@ -17,7 +17,9 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173",
+        "http://localhost:4500/auth/google/callback"
+    ],
     credentials: true,
 }));
 

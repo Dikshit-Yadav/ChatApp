@@ -1,5 +1,8 @@
 import { useState, useRef } from "react";
 import { authApi } from "../services/authAPI";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 export default function Verify({ email, onClose, onVerified }: any) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const inputs = useRef<Array<HTMLInputElement | null>>([]);
@@ -23,13 +26,15 @@ export default function Verify({ email, onClose, onVerified }: any) {
       const data = await authApi.verifyOtp(email, code);
 
       if (!data){
+        toast.error("OTP send failed!");
         console.log("err on otp send")
       }
 
       onVerified();
+      toast.success("OTP verified!");
       onClose();
     } catch (err) {
-      alert(err);
+      toast.error(err.response?.data?.message||"Invalid OTP");
     }
   };
 
@@ -72,6 +77,7 @@ export default function Verify({ email, onClose, onVerified }: any) {
           Cancel
         </button>
       </div>
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
     </div>
   );
 }

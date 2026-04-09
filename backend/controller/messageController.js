@@ -69,7 +69,7 @@ export const getMessage = async (req, res) => {
             Number(limit)
         );
         const messageArray = Array.isArray(messages) ? messages : messages.docs || [];
-        console.log(messageArray)
+        // console.log(messageArray)
         res.json(messageArray);
     } catch (err) {
         console.error(err);

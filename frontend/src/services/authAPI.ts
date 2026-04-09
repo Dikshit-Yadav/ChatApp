@@ -42,4 +42,10 @@ export const authApi = {
     return api.post(API_ENDPOINTS.AUTH.LOGOUT);
   },
 
+  //authcheck
+  authCheck: () => {
+    return api.get(API_ENDPOINTS.AUTH.AUTHCHECK);
+  },
+
+
 };

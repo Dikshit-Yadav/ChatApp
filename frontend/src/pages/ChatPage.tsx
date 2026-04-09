@@ -1,13 +1,31 @@
 import { useEffect } from "react";
+import {getMe} from "../services/userAPI.ts";
 import Sidebar from "../components/Sidebar";
 import AddFriend from "./AddFriend";
 import RightPanel from "../components/RightPanel";
 import ChatPanel from "../components/ChatPanel";
-import { Routes, Route, useParams } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { socket } from "../contex/socket";
 import ProfilePage from "../components/ProfilePanel";
 
 export default function ChatPage() {
+ useEffect(() => {
+  async function initUser() {
+    let storedUser = localStorage.getItem("user");
+
+    if (!storedUser) {
+      try {
+        const res = await getMe();
+        localStorage.setItem("user", JSON.stringify(res.data));
+        storedUser = JSON.stringify(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  }
+
+  initUser();
+}, []);
   useEffect(() => {
     const user = localStorage.getItem("user");
     if (user && !socket.connected) {

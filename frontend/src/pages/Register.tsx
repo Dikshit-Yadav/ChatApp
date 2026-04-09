@@ -2,6 +2,8 @@ import { useState } from "react";
 import { authApi} from "../services/authAPI";
 import { useNavigate } from "react-router-dom";
 import Otp from "../components/Otp";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -30,11 +32,11 @@ export default function Register() {
 
       // localStorage.setItem("user", JSON.stringify(res.data.user._id));
       localStorage.setItem("user", JSON.stringify(res.data.user));
-
+      toast.success("Registration successful!")
       navigate("/chat");
 
-    } catch (err: any) {
-      alert(err.response?.data?.message || "Registration failed");
+    } catch (err:any) {
+      toast.error(err.message|| "Registration failed!");
     } finally {
       setLoading(false);
     }
@@ -82,8 +84,9 @@ export default function Register() {
                     console.log(res.data.message);
 
                     setShowOtpModal(true);
-
+                    toast.success("OTP sent!")
                   } catch (error: any) {
+                    toast.error(error.data||"OTP send failed!")
                     console.error(error.response?.data?.message || error.message);
                     setShowOtpModal(false);
                   } finally {
@@ -178,6 +181,7 @@ export default function Register() {
           }}
         />
       )}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
     </div>
   );
 }

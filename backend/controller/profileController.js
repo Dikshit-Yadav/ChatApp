@@ -28,6 +28,17 @@ export const updateProfile = async (req, res) => {
     }
 };
 
+export const updatePic = async (req, res) => {
+    try {
+        const updatedUser = await userService.updatePic(req.params.userId, req.file);
+
+        res.json(updatedUser);
+    }catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+
 export const deleteProfile = async (req, res) => {
     try {
         const deletedUser = await userService.deleteUser(req.params.userId);

@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { socket } from "../contex/socket";
 import { useChatStore } from "../store/chatStore";
 
+
 const ChatPanel = () => {
   const { conversationId } = useParams();
 
@@ -50,7 +51,7 @@ const ChatPanel = () => {
     setupSocketListeners();
   }, []);
 
-  // jJoin room
+  // join room
   useEffect(() => {
     if (!conversationId) return;
 
@@ -86,99 +87,103 @@ const ChatPanel = () => {
     setNewMessage("");
   };
 
-  return (
-    <div className="flex-1 flex flex-col bg-white h-screen border-l">
-      
-      {/* Header */}
-      <div className="p-4 border-b flex items-center gap-3">
-        {conversationUser && (
-          <>
-            <img
-              src={
-                conversationUser.profilePic ||
-                "https://i.pravatar.cc/40"
-              }
-              className="w-10 h-10 rounded-full"
-            />
-            <div>
-              <h3 className="font-semibold">
-                {conversationUser.username}
-              </h3>
-              {isOnline && (
-                <span className="text-green-500 text-sm">
-                  Online
-                </span>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+ return (
+  <div className="flex-1 flex flex-col h-screen bg-gray-100 ">
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
-        {messages.map((msg) => {
-          const me = isMe(msg);
+    {/* header */}
+    <div className="sticky top-0 z-10 bg-white  p-4 flex items-center gap-3 shadow-sm">
+      {conversationUser && (
+        <>
+          <img
+            src={conversationUser.profilePic || "https://i.pravatar.cc/40"}
+            className="w-10 h-10 rounded-full object-cover"
+          />
+          <div className="flex flex-col">
+            <h3 className="font-semibold text-gray-800">
+              {conversationUser.username}
+            </h3>
+            <span className={`text-xs ${isOnline ? "text-green-500" : "text-gray-400"}`}>
+              {isOnline ? "Online" : "Offline"}
+            </span>
+          </div>
+        </>
+      )}
+    </div>
 
-          return (
-            <div
-              key={msg._id}
-              className={`max-w-[70%] ${
-                me ? "self-end" : "self-start"
-              }`}
-            >
+    {/* messages */}
+    <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+      {messages.map((msg) => {
+        const me = isMe(msg);
+
+        return (
+          <div
+            key={msg._id}
+            className={`flex items-end gap-2 ${
+              me ? "justify-end" : "justify-start"
+            }`}
+          >
+
+            <div className="flex flex-col max-w-[70%]">
               <div
-                className={`p-2 rounded-xl ${
+                className={`px-4 py-2 rounded-2xl text-sm shadow ${
                   me
-                    ? "bg-teal-500 text-white"
-                    : "bg-gray-200"
+                    ? "bg-teal-500 text-white rounded-br-none"
+                    : "bg-white text-gray-800 rounded-bl-none"
                 }`}
               >
                 {msg.message}
               </div>
 
-              <span className="text-xs text-gray-400">
+              <span
+                className={`text-xs mt-1 ${
+                  me ? "text-right text-gray-300" : "text-gray-400"
+                }`}
+              >
                 {new Date(msg.createdAt).toLocaleTimeString([], {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}
               </span>
             </div>
-          );
-        })}
+          </div>
+        );
+      })}
 
-        {typing && (
-          <div className="text-gray-500 animate-pulse">
+      {/* typing effect */}
+      {typing && (
+        <div className="flex items-center gap-2">
+          <div className="bg-white px-4 py-2 rounded-2xl shadow text-gray-500 animate-pulse pr-b-15">
             typing...
           </div>
-        )}
+        </div>
+      )}
 
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input */}
-      <div className="p-4 border-t flex gap-2">
-        <input
-          value={newMessage}
-          onChange={(e) => {
-            setNewMessage(e.target.value);
-            handleTyping();
-          }}
-          onKeyDown={(e) =>
-            e.key === "Enter" && handleSend()
-          }
-          className="flex-1 border px-3 py-2 rounded-full"
-          placeholder="Type a message..."
-        />
-
-        <button
-          onClick={handleSend}
-          className="bg-teal-600 text-white px-4 py-2 rounded-full"
-        >
-          Send
-        </button>
-      </div>
+      <div ref={messagesEndRef} />
     </div>
-  );
+
+    {/* input */}
+    <div className="p-3 bg-white  flex items-center gap-2 shadow-md">
+      <input
+        value={newMessage}
+        onChange={(e) => {
+          setNewMessage(e.target.value);
+          handleTyping();
+        }}
+        onKeyDown={(e) => e.key === "Enter" && handleSend()}
+        className="flex-1 border border-gray-300 px-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-400"
+        placeholder="Type a message..."
+      />
+
+      <button
+        onClick={handleSend}
+        className="bg-teal-600 hover:bg-teal-700 transition text-white px-5 py-2 rounded-full shadow"
+      >
+        Send
+      </button>
+    </div>
+    
+  </div>
+);
 };
 
 export default ChatPanel;

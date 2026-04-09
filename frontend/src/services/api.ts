@@ -17,8 +17,10 @@ export const API_ENDPOINTS = {
     VERIFY_OTP: "/auth/verify",
     RESET_PASSWORD: "/auth/reset-password",
     LOGOUT: "/auth/logout",
+    AUTHCHECK: "/auth/check",
   },
   USER: {
+    GETME: "/user/me",
     SEARCH_FRIENDS: "/user/search",
     GET_FRIENDS: "/user/friends",
     GET_SUGGESTION: "/user/suggestion",
@@ -40,6 +42,7 @@ export const API_ENDPOINTS = {
     GET_PROFILE: "/profile",
     UPDATE_PROFILE: "/profile",
     DELETE_PROFILE: "/profile",
+    PROFILE_PIC: "/profile",
   },
 };
 

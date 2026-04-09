@@ -1,5 +1,22 @@
 import * as userService from "../services/userServices.js";
 
+
+
+//me 
+export const getMe = async (req, res) => {
+    try {
+        const user = await userService.getUserById(req.session.user.id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.json(user);
+    } catch (err) {
+        console.error(err);
+        res.status(err.status || 500).json({ message: err.message || "Server error" });
+    }
+};
+
+
 // search users
 export const searchUser = async (req, res) => {
     try {

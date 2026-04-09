@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { getFriends } from "../services/userAPI";
 import { useNavigate } from "react-router-dom";
 import { conversationApi } from "../services/conversationAPI";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface Friend {
     _id: string;
@@ -36,9 +38,10 @@ const RightPanel = () => {
                     lastMessage: conversation?.lastMessage || "Start conversation..."
                 };
             });
-
+            
             setFriends(friendsWithLastMessage);
         } catch (err) {
+            toast.error("failed to fetch friends!")
             console.error("Error fetching friends and conversations", err);
         } finally {
             setLoading(false);
@@ -55,6 +58,7 @@ const RightPanel = () => {
                 navigate(`/chat/messages/${conversation.data._id}`);
             }
         } catch (err) {
+            toast.error("error opening conversation!")
             console.error("Error opening conversation:", err);
         }
     };
@@ -145,6 +149,7 @@ const RightPanel = () => {
                     ))
                 )}
             </div>
+            <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
         </div>
     );
 };

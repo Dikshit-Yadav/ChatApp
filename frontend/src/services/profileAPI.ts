@@ -18,3 +18,12 @@ export const updateProfile = (userId: string, formData: FormData) => {
 export const deleteProfile = (userId: string) => {
   return api.delete(`${API_ENDPOINTS.PROFILE.DELETE_PROFILE}/${userId}/delete`);
 };
+
+// update profile pic
+export const updateProfilePic = (userId: string, formData: FormData) => {
+  return api.patch(`${API_ENDPOINTS.PROFILE.PROFILE_PIC}/${userId}/update-pic`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};  

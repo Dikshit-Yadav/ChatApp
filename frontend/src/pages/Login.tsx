@@ -2,6 +2,8 @@ import { useState } from "react";
 import {authApi} from "../services/authAPI"
 import { useNavigate } from "react-router-dom";
 import { socket } from "../contex/socket";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -23,10 +25,12 @@ export default function Login() {
 
     localStorage.setItem("user", JSON.stringify(res.data.user));
     socket.connect();
+    
+    toast.success("Login successful!");
     navigate("/chat");
-
+    
   } catch (err: any) {
-    alert(err.response?.data?.message || "Login failed");
+    toast.error(err.response?.data?.message || "Login failed");
   } finally {
     setLoading(false);
   }
@@ -128,6 +132,7 @@ export default function Login() {
           </span>
         </p>
       </div>
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
     </div>
   );
 }

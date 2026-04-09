@@ -3,6 +3,12 @@ import Invitation from "../models/Invitation.js";
 import Conversation from "../models/Conversation.js";
 import mongoose from "mongoose";
 
+//me
+export const getUserById = async (userId) => {
+    return await User.findById(userId).select("-password");
+};
+
+
 // search users
 export const searchUserService = async (search, userId) => {
     if (!search) throw new Error("Search query is required");

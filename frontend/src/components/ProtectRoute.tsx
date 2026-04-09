@@ -1,11 +1,19 @@
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
+import { authApi } from "../services/authAPI";
 
 export default function ProtectedRoute({ children }: any) {
-  const user = localStorage.getItem("user");
+  const [loading, setLoading] = useState(true);
+  const [isAuth, setIsAuth] = useState(false);
 
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
+  useEffect(() => {
+    authApi.authCheck()
+      .then(() => setIsAuth(true))
+      .catch(() => setIsAuth(false))
+      .finally(() => setLoading(false));
+  }, []);
 
-  return children;
+  if (loading) return <div>Loading...</div>;
+
+  return isAuth ? children : <Navigate to="/login" replace />;
 }

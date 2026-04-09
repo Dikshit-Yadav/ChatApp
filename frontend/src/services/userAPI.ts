@@ -16,3 +16,7 @@ export const getSuggestions = () => {
 export const respondInvite = (invitationId: string, status: string) => {
   return api.post(API_ENDPOINTS.USER.RESPOND_INVITE, { invitationId, status });
 };
+
+export const getMe = () => {
+  return api.get(API_ENDPOINTS.USER.GETME);
+};

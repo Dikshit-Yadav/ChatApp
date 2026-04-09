@@ -119,9 +119,20 @@ export const logout = (req, res) => {
     });
 };
 
+
+
+export const authCheck = (req, res) => {
+  if (req.session.user) {
+    // console.log(req.session.user)
+    return res.json({ authenticated: true, user: req.session.user });
+  }
+  res.status(401).json({ authenticated: false });
+};
+
 // google callback
 export const googleCallback = (req, res) => {
     try {
+        // console.log(req.user)
         if (!req.user) {
             return res.redirect(`${CLIENT_URL}/login`);
         }
@@ -130,8 +141,10 @@ export const googleCallback = (req, res) => {
             id: req.user._id,
             email: req.user.email,
         };
-
-        res.redirect(CLIENT_URL);
+        
+        req.session.save(() => {
+            res.redirect(`${CLIENT_URL}/chat`);
+        });
     } catch (error) {
         res.redirect(`${CLIENT_URL}/login?error=oauth_failed`);
     }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { authApi } from "../services/authAPI";
+import toast from "react-hot-toast";
 
 export default function ResetPassword() {
     const [password, setPassword] = useState("");
@@ -15,11 +16,12 @@ export default function ResetPassword() {
 
             const data = res.data;
 
-            alert(data.message || "Password reset successful");
+            toast.success(data.message || "Password reset successful");
             navigate("/login");
 
         } catch (err: any) {
-            alert(err.response?.data?.message || "Something went wrong");
+            toast.error(err.response?.data?.message || "Password reset failed");
+            console.log(err.response?.data?.message || "password reset failed");
         }
     };
 
@@ -52,7 +54,7 @@ export default function ResetPassword() {
                 </button>
 
             </div>
-
+            <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
         </div>
     );
 }

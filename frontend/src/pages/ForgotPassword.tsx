@@ -2,6 +2,9 @@ import { useState } from "react";
 import Otp from "../components/Otp";
 import { authApi } from "../services/authAPI";
 import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 export default function ForgotPassword() {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
@@ -14,11 +17,12 @@ export default function ForgotPassword() {
 
         const res = await authApi.sendOtpForgot(email);
 
-        alert(res.data.message);
+        toast.success(res.data.message)
         setShowOtp(true);
 
     } catch (err) {
-        alert(err || "Something went wrong");
+        toast.error(err.response?.data?.message || "OTP send failed!");
+        console.log(err || "otp send failed");
     } finally {
         setLoading(false);
     }
@@ -65,6 +69,7 @@ export default function ForgotPassword() {
                     }}
                 />
             )}
+            <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
         </div>
     );
 }

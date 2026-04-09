@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { Toaster } from "react-hot-toast";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ProtectedRoute from "./components/ProtectRoute";
@@ -12,7 +13,7 @@ import AddFriend from "./pages/AddFriend";
 function App() {
   return (
     <BrowserRouter>
-      <Toaster position="top-right" />
+     <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
       <Routes>
         <Route path="/" element={<Navigate to="/chat" />} />
         <Route path="/login" element={<Login />} />

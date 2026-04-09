@@ -1,10 +1,11 @@
-import { MessageCircle, UserPlus, Settings, Users, LogOut } from "lucide-react";
+import { MessageCircle, UserPlus, Users, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getInvitations } from "../services/invitationAPI";
 import { authApi } from "../services/authAPI";
 import { socket } from "../contex/socket.ts";
-import toast from "react-hot-toast";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function Sidebar() {
     const userData = JSON.parse(localStorage.getItem("user") || "{}");
@@ -38,6 +39,7 @@ export default function Sidebar() {
             const res = await getInvitations();
             setRequestCount(res.data.length);
         } catch (err) {
+            toast.error("failed to fetch invites!")
             console.error(err);
         }
     };
@@ -46,6 +48,7 @@ export default function Sidebar() {
         try {
             await authApi.logout();
         } catch (err) {
+            toast.error("Logout failed!")
             console.error("Logout error:", err);
         } finally {
             socket.disconnect();
@@ -55,8 +58,18 @@ export default function Sidebar() {
     };
 
     return (
-        <div className="w-[80px] h-screen bg-[#E6F2F7] shadow-lg flex flex-col justify-between p-4">
-            <div className="flex flex-col items-center space-y-6 mt-2">
+        <div className="w-[80px] sm:w-[60px] md:w-[80px] h-screen bg-[#E6F2F7] shadow-lg flex flex-col justify-between p-4">
+
+            <div className="flex flex-col items-center mt-2">
+                <img
+                    src={profilePic || "https://i.pravatar.cc/40"}
+                    alt="User Avatar"
+                    className="w-10 h-10 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full object-cover cursor-pointer ring-2 ring-teal-400"
+                    onClick={() => navigate("/chat/profile")}
+                />
+            </div>
+
+            <div className="flex flex-col items-center space-y-6 mt-8">
                 <button
                     onClick={() => navigate("/chat")}
                     className="p-2 rounded-lg hover:bg-teal-200 text-teal-700 transition-colors"
@@ -90,13 +103,7 @@ export default function Sidebar() {
                 </button>
             </div>
 
-            <div className="flex flex-col items-center space-y-6 mb-2">
-                <img
-                    src={profilePic || "https://i.pravatar.cc/40"}
-                    alt="User Avatar"
-                    className="w-10 h-10 rounded-full object-cover cursor-pointer ring-2 ring-teal-400"
-                    onClick={() => navigate("/chat/profile")}
-                />
+            <div className="flex flex-col items-center mb-2 mt-auto">
                 <button
                     onClick={handleLogout}
                     className="p-2 rounded-lg hover:bg-teal-200 text-teal-700 transition-colors"
@@ -105,6 +112,8 @@ export default function Sidebar() {
                     <LogOut size={26} />
                 </button>
             </div>
+
+            <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
         </div>
     );
 }

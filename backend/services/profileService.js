@@ -21,6 +21,17 @@ export const updateUser = async (userId, data, file) => {
     });
 };
 
+export const updatePic = async (userId, file) => {
+    const domain = "http://localhost:4500";
+    const profilePic = `${domain}/uploads/${file.filename}`;
+
+    return await User.findByIdAndUpdate(
+        userId,
+        { profilePic },
+        { new: true }
+    );
+};
+
 export const deleteUser = async (userId) => {
     return await User.findByIdAndDelete(userId);
 };
