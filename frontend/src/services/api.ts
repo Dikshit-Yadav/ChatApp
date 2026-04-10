@@ -32,11 +32,29 @@ export const API_ENDPOINTS = {
     GET: "/invite",
   },
   CONVERSATION: {
-  BASE: "/conversation",
-  CREATE_OR_GET: "/conversation",
-},
+    BASE: "/conversation",
+
+    // Private chat
+    CREATE_OR_GET: "/conversation",
+    GET_ALL: "/conversation",
+    GET_BY_ID: (id: string) => `/conversation/${id}`,
+    DELETE: (id: string) => `/conversation/${id}`,
+
+    // Group chat
+    CREATE_GROUP: "/conversation/group",
+    GET_GROUP: (id: string) => `/conversation/group/${id}`,
+    UPDATE_GROUP: (id: string) => `/conversation/group/${id}`,
+    DELETE_GROUP: (id: string) => `/conversation/group/${id}`,
+
+    // 🔥 FIXED
+    ADD_MEMBER: "/conversation/group/add-member",
+    REMOVE_MEMBER: "/conversation/group/remove-member",
+  },
+
   MESSAGES: {
     BASE: "/message",
+    GET_BY_CONVERSATION: (id: string) => `/message/${id}`,
+    SEND: (id: string) => `/message/${id}`,
   },
   PROFILE: {
     GET_PROFILE: "/profile",

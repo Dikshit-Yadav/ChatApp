@@ -1,8 +1,8 @@
 import * as messageService from "../services/messageServices.js";
 import * as fileService from "../services/fileServices.js";
 import * as conversationService from "../services/conversationService.js";
+import {getReceiverSockets} from "../socket/index.js";
 import { getIO } from "../server.js";
-import { getReceiverSocket } from "../socket/index.js";
 
 // send text message
 export const sendMessage = async (req, res) => {
@@ -31,7 +31,7 @@ export const sendMessage = async (req, res) => {
         const io = getIO();
         conversation.members.forEach((member) => {
             if (member._id.toString() !== senderId.toString()) {
-                const receiverSocket = getReceiverSocket(member._id.toString());
+                const receiverSocket = getReceiverSockets(member._id.toString());
                 if (receiverSocket) {
                     io.to(receiverSocket).emit("new-message", msg);
                 }
@@ -104,7 +104,7 @@ export const getMessage = async (req, res) => {
             const io = getIO();
             conversation.members.forEach((member) => {
                 if (member._id.toString() !== senderId.toString()) {
-                    const receiverSocket = getReceiverSocket(member._id.toString());
+                    const receiverSocket = getReceiverSockets(member._id.toString());
                     if (receiverSocket) {
                         io.to(receiverSocket).emit("new-message", msg);
                     }

@@ -22,34 +22,34 @@ const RightPanel = () => {
 
     const navigate = useNavigate();
 
-   useEffect(() => {
-    const fetchfriends = async () => {
-        try {
-            const res = await getFriends();
-            const { friends: friendsData, conversations } = res.data;
+    useEffect(() => {
+        const fetchfriends = async () => {
+            try {
+                const res = await getFriends();
+                const { friends: friendsData, conversations } = res.data;
 
-            const friendsWithLastMessage = friendsData.map((friend: Friend) => {
-                const conversation = conversations.find(conv =>
-                    conv.members?.includes(friend._id)
-                );
+                const friendsWithLastMessage = friendsData.map((friend: Friend) => {
+                    const conversation = conversations.find(conv =>
+                        conv.members?.includes(friend._id)
+                    );
 
-                return {
-                    ...friend,
-                    lastMessage: conversation?.lastMessage || "Start conversation..."
-                };
-            });
-            
-            setFriends(friendsWithLastMessage);
-        } catch (err) {
-            toast.error("failed to fetch friends!")
-            console.error("Error fetching friends and conversations", err);
-        } finally {
-            setLoading(false);
-        }
-    };
+                    return {
+                        ...friend,
+                        lastMessage: conversation?.lastMessage || "Start conversation..."
+                    };
+                });
 
-    fetchfriends();
-}, []);
+                setFriends(friendsWithLastMessage);
+            } catch (err) {
+                toast.error("failed to fetch friends!")
+                console.error("Error fetching friends and conversations", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchfriends();
+    }, []);
 
     const handleFriendClick = async (friendId: string) => {
         try {
@@ -87,22 +87,27 @@ const RightPanel = () => {
 
             <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-200">
                 <button
-                    className={`flex-1 text-sm font-medium pb-1 text-center rounded-md ${
-                        activeTab === "direct"
-                            ? "text-teal-600 border-b-2 border-teal-600"
-                            : "text-gray-500 hover:text-teal-600 transition-colors"
-                    }`}
-                    onClick={() => setActiveTab("direct")}
+                    className={`flex-1 text-sm font-medium pb-1 text-center rounded-md ${activeTab === "direct"
+                        ? "text-teal-600 border-b-2 border-teal-600"
+                        : "text-gray-500 hover:text-teal-600 transition-colors"
+                        }`}
+                    onClick={() => {
+                        setActiveTab("direct")
+                        navigate("/chat")
+                    }
+                    }
                 >
                     Direct
                 </button>
                 <button
-                    className={`flex-1 text-sm font-medium pb-1 text-center rounded-md ${
-                        activeTab === "groups"
-                            ? "text-teal-600 border-b-2 border-teal-600"
-                            : "text-gray-500 hover:text-teal-600 transition-colors"
-                    }`}
-                    onClick={() => setActiveTab("groups")}
+                    className={`flex-1 text-sm font-medium pb-1 text-center rounded-md ${activeTab === "groups"
+                        ? "text-teal-600 border-b-2 border-teal-600"
+                        : "text-gray-500 hover:text-teal-600 transition-colors"
+                        }`}
+                    onClick={() => { 
+                        setActiveTab("groups")
+                        navigate("/chat/groups") 
+                    }}
                 >
                     Groups
                 </button>

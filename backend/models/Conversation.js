@@ -8,10 +8,10 @@ const conversationSchema = new mongoose.Schema(
         },
         members: {
             type: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-            validate: {
-                validator: (val) => val.length >= 2,
-                message: "A conversation must have at least 2 members",
-            },
+            // validate: {
+            //     validator: (val) => val.length >= 2,
+            //     message: "A conversation must have at least 2 members",
+            // },
         },
         groupName: {
             type: String,

@@ -1,7 +1,8 @@
 import { create } from "zustand";
+
 import { conversationApi } from "../services/conversationAPI";
 import { socket } from "../contex/socket";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 interface Message {

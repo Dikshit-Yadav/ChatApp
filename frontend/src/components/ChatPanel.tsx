@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { socket } from "../contex/socket";
 import { useChatStore } from "../store/chatStore";
-
+import { Timer } from "lucide-react";
 
 const ChatPanel = () => {
   const { conversationId } = useParams();
@@ -21,6 +21,8 @@ const ChatPanel = () => {
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [scheduleDelay, setScheduleDelay] = useState<number | null>(null);
+const [showTimer, setShowTimer] = useState(false);
 
   const loggedInUserId = JSON.parse(
     localStorage.getItem("user") || "{}"
@@ -80,12 +82,33 @@ const ChatPanel = () => {
   };
 
   // send message
-  const handleSend = async () => {
-    if (!newMessage.trim() || !conversationId) return;
+  // const handleSend = async () => {
+  //   if (!newMessage.trim() || !conversationId) return;
 
-    await sendMessage(conversationId, newMessage);
-    setNewMessage("");
-  };
+  //   await sendMessage(conversationId, newMessage);
+  //   setNewMessage("");
+  // };
+
+  const handleSend = async () => {
+  if (!newMessage.trim() || !conversationId) return;
+
+  const messageToSend = newMessage;
+
+  setNewMessage("");
+
+  if (scheduleDelay) {
+    setShowTimer(false);
+
+    setTimeout(async () => {
+      await sendMessage(conversationId, messageToSend);
+    }, scheduleDelay * 1000);
+
+    setScheduleDelay(null);
+    return;
+  }
+
+  await sendMessage(conversationId, messageToSend);
+};
 
  return (
   <div className="flex-1 flex flex-col h-screen bg-gray-100 ">
@@ -162,25 +185,55 @@ const ChatPanel = () => {
     </div>
 
     {/* input */}
-    <div className="p-3 bg-white  flex items-center gap-2 shadow-md">
-      <input
-        value={newMessage}
-        onChange={(e) => {
-          setNewMessage(e.target.value);
-          handleTyping();
-        }}
-        onKeyDown={(e) => e.key === "Enter" && handleSend()}
-        className="flex-1 border border-gray-300 px-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-400"
-        placeholder="Type a message..."
-      />
+    <div className="p-3 bg-white flex items-center gap-2 shadow-md relative">
 
-      <button
-        onClick={handleSend}
-        className="bg-teal-600 hover:bg-teal-700 transition text-white px-5 py-2 rounded-full shadow"
-      >
-        Send
-      </button>
+  {/* Timer button */}
+  <button
+    onClick={() => setShowTimer(!showTimer)}
+    className="p-2 hover:bg-gray-100 rounded-full"
+  >
+    <Timer size={20} />
+  </button>
+
+  {/* Timer dropdown */}
+  {showTimer && (
+    <div className="absolute bottom-14 left-3 bg-white shadow-lg rounded-lg p-2 flex gap-2">
+      {[5, 10, 30].map((sec) => (
+        <button
+          key={sec}
+          onClick={() => setScheduleDelay(sec)}
+          className={`px-2 py-1 text-sm rounded ${
+            scheduleDelay === sec ? "bg-teal-500 text-white" : "bg-gray-100"
+          }`}
+        >
+          {sec}s
+        </button>
+      ))}
     </div>
+  )}
+
+  <input
+    value={newMessage}
+    onChange={(e) => {
+      setNewMessage(e.target.value);
+      handleTyping();
+    }}
+    onKeyDown={(e) => e.key === "Enter" && handleSend()}
+    className="flex-1 border border-gray-300 px-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-400"
+    placeholder={
+      scheduleDelay
+        ? `Message will send in ${scheduleDelay}s...`
+        : "Type a message..."
+    }
+  />
+
+  <button
+    onClick={handleSend}
+    className="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 rounded-full shadow"
+  >
+    Send
+  </button>
+</div>
     
   </div>
 );

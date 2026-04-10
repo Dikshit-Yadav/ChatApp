@@ -9,7 +9,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 export default function Sidebar() {
     const userData = JSON.parse(localStorage.getItem("user") || "{}");
-    console.log(userData.profilePic)
+    // console.log(userData.profilePic)
     const profilePic = userData.profilePic;
     const navigate = useNavigate();
     const [requestCount, setRequestCount] = useState(0);
@@ -79,7 +79,7 @@ export default function Sidebar() {
                 </button>
 
                 <button
-                    onClick={() => navigate("/groups")}
+                    onClick={() => navigate("/chat/groups")}
                     className="p-2 rounded-lg hover:bg-teal-200 text-teal-700 transition-colors"
                     aria-label="Groups"
                 >

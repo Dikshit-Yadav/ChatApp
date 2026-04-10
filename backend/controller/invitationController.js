@@ -1,7 +1,7 @@
 import * as invitationService from "../services/invitationServices.js";
 import User from "../models/User.js";
 import { getIO } from "../server.js";
-import { getReceiverSocket } from "../socket/index.js";
+import { getReceiverSockets} from "../socket/index.js";
 
 // send invite
 export const invite = async (req, res) => {
@@ -17,7 +17,7 @@ export const invite = async (req, res) => {
 
         const sender = await User.findById(senderId).select("username email profilePic");
 
-        const receiverSocket = getReceiverSocket(receiverId);
+        const receiverSocket = getReceiverSockets(receiverId);
         if (receiverSocket) {
             const io = getIO();
             io.to(receiverSocket).emit("new-invite", {
@@ -58,7 +58,7 @@ export const responseInvite = async (req, res) => {
         const updatedInvite = await invitationService.respondInviteService(invitationId, status);
 
         const senderId = updatedInvite.senderId._id.toString();
-        const receiverSocket = getReceiverSocket(senderId);
+        const receiverSocket = getReceiverSockets(senderId);
         if (receiverSocket) {
             const io = getIO();
             io.to(receiverSocket).emit("invite-response", {
