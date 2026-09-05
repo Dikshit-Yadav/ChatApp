@@ -16,6 +16,7 @@ export default function AddFriend() {
     } = useFriendStore();
 
     const loggedInUser = JSON.parse(localStorage.getItem("user") || "{}");
+    // console.log(loggedInUser.friends)
     const currentUserId = typeof loggedInUser === "string" ? loggedInUser : loggedInUser?._id;
 
     // initial fetch
@@ -80,7 +81,7 @@ export default function AddFriend() {
                             <p className="font-medium">{user.username}</p>
                             <p className="text-xs text-gray-500 mb-3">{user.email}</p>
 
-                            {user.friends?.includes(currentUserId) ? (
+                            {loggedInUser.friends?.includes(user._id) ? (
                                 <button className="w-full bg-gray-400 text-white py-1 rounded-lg">Friends</button>
                             ) : user.invitationStatus === "pending" ? (
                                 <button className="w-full bg-yellow-500 text-white py-1 rounded-lg">Pending</button>

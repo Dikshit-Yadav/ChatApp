@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { conversationApi } from "../services/conversationAPI";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { socket } from "../contex/socket.ts";
 
 interface Friend {
     _id: string;
@@ -11,6 +12,7 @@ interface Friend {
     profilePic?: string;
     lastMessage?: string;
     unread?: number;
+    conversationId?: string;
 }
 
 const RightPanel = () => {
@@ -104,9 +106,9 @@ const RightPanel = () => {
                         ? "text-teal-600 border-b-2 border-teal-600"
                         : "text-gray-500 hover:text-teal-600 transition-colors"
                         }`}
-                    onClick={() => { 
+                    onClick={() => {
                         setActiveTab("groups")
-                        navigate("/chat/groups") 
+                        navigate("/chat/groups")
                     }}
                 >
                     Groups

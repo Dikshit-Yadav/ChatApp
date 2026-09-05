@@ -1,3 +1,5 @@
+import type{ Reaction } from "../types/type";
+
 export type User = {
   _id: string;
   username: string;
@@ -19,4 +21,5 @@ export type Message = {
   senderId: string | User;
   message: string;
   createdAt: string;
+  reactions?: Reaction[];
 };

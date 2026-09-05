@@ -1,17 +1,18 @@
 import session from "express-session";
-import MongoStore from "connect-mongo";
+import { RedisStore } from "connect-redis";
+import redisClient from "../config/redisClient.js";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 const sessionMiddleware = session({
+    store: new RedisStore({
+        client: redisClient,
+        prefix: "sess:",
+    }),
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({
-        mongoUrl: process.env.MONGO_URI,
-        ttl: 24 * 60 * 60,
-    }),
     cookie: {
         secure: false,
         maxAge: 24 * 60 * 60 * 1000,

@@ -18,10 +18,18 @@ const messageSchema = new mongoose.Schema(
         },
         file: {
             url: { type: String },
-            type: { type: String, enum: ["image", "video", "audio", "document"] },
+            type: { type: String, enum: ["image", "video", "audio", "document", "other"] },
             name: { type: String },
             size: { type: Number },
         },
+        files: [
+            {
+                url: { type: String },
+                type: { type: String, enum: ["image", "video", "audio", "document", "other"] },
+                name: { type: String },
+                size: { type: Number },
+            },
+        ],
         status: {
             type: String,
             enum: ["sent", "delivered", "seen"],
@@ -29,6 +37,12 @@ const messageSchema = new mongoose.Schema(
         },
         deletedFor: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
         deletedForEveryone: { type: Boolean, default: false },
+        reactions: [
+            {
+                userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+                emoji: { type: String },
+            },
+        ],
     },
     { timestamps: true }
 );

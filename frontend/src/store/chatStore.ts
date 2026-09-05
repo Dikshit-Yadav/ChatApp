@@ -5,11 +5,17 @@ import { socket } from "../contex/socket";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+interface Reaction {
+  userId: { _id: string; username?: string; profilePic?: string } | string;
+  emoji: string;
+}
+
 interface Message {
   _id: string;
   senderId: { _id: string; username?: string; profilePic?: string };
   message: string;
   createdAt: string;
+  reactions?: Reaction[];
 }
 
 interface User {
@@ -29,6 +35,10 @@ interface ChatState {
   fetchMessages: (conversationId: string) => Promise<void>;
   fetchConversation: (conversationId: string, userId: string) => Promise<void>;
   sendMessage: (conversationId: string, text: string) => Promise<void>;
+  sendFileMessage: (conversationId: string, files: File[], text?: string) => Promise<boolean>;
+  toggleReaction: (messageId: string, emoji: string) => Promise<void>;
+  deleteMessageForEveryone: (messageId: string) => Promise<void>;
+  deleteMessageForMe: (messageId: string) => Promise<void>;
 
   setupSocketListeners: () => void;
 }
@@ -39,7 +49,6 @@ export const useChatStore = create<ChatState>((set) => ({
   typing: false,
   onlineUsers: [],
 
-  //  fetch messages
   fetchMessages: async (conversationId) => {
     try {
       const res = await conversationApi.getMessages(conversationId);
@@ -50,7 +59,6 @@ export const useChatStore = create<ChatState>((set) => ({
     }
   },
 
-  // fetch conversation user
   fetchConversation: async (conversationId, userId) => {
     try {
       const res = await conversationApi.getConversation(conversationId);
@@ -92,6 +100,88 @@ export const useChatStore = create<ChatState>((set) => ({
     }
   },
 
+  sendFileMessage: async (conversationId, files, text = "") => {
+    try {
+      const formData = new FormData();
+      files.forEach((file) => {
+        formData.append("files", file);
+      });
+      if (text) {
+        formData.append("text", text);
+      }
+
+      const res = await conversationApi.sendFileMessage(conversationId, formData);
+
+      const msg = {
+        ...res.data,
+        senderId:
+          typeof res.data.senderId === "string"
+            ? { _id: res.data.senderId }
+            : res.data.senderId,
+      };
+
+      set((state) => ({
+        messages: [...state.messages, msg],
+      }));
+
+      socket.emit("stop-typing", { conversationId });
+      return true;
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || "Error uploading file(s)";
+      toast.error(errorMsg);
+      console.error("Error sending file message", err);
+      return false;
+    }
+  },
+
+  toggleReaction: async (messageId, emoji) => {
+    try {
+      const res = await conversationApi.toggleReaction(messageId, emoji);
+
+      const updatedMsg = {
+        ...res.data,
+        senderId: typeof res.data.senderId === "string"
+          ? { _id: res.data.senderId }
+          : res.data.senderId,
+      };
+
+      set((state) => ({
+        messages: state.messages.map((msg) =>
+          msg._id === messageId ? updatedMsg : msg
+        ),
+      }));
+    } catch (err) {
+      toast.error("Error updating reaction");
+      console.error("Error toggling reaction", err);
+    }
+  },
+
+  // delete message for everyone
+  deleteMessageForEveryone: async (messageId) => {
+    try {
+      await conversationApi.deleteMessageForEveryone(messageId);
+      set((state) => ({
+        messages: state.messages.filter((m) => m._id !== messageId),
+      }));
+    } catch (err) {
+      toast.error("Error deleting message");
+      console.error("Error deleting for everyone", err);
+    }
+  },
+
+  // delete message for me
+  deleteMessageForMe: async (messageId) => {
+    try {
+      await conversationApi.deleteMessageForMe(messageId);
+      set((state) => ({
+        messages: state.messages.filter((m) => m._id !== messageId),
+      }));
+    } catch (err) {
+      toast.error("Error deleting message");
+      console.error("Error deleting for me", err);
+    }
+  },
+
   // socket listeners
   setupSocketListeners: () => {
     if (initialized) return;
@@ -103,11 +193,25 @@ export const useChatStore = create<ChatState>((set) => ({
       }));
     });
 
+    socket.on("message-reaction-updated", (updatedMsg: Message) => {
+      set((state) => ({
+        messages: state.messages.map((m) =>
+          m._id === updatedMsg._id ? updatedMsg : m
+        ),
+      }));
+    });
+
     socket.on("online-users", (users: string[]) => {
       set({ onlineUsers: users });
     });
 
     socket.on("user-typing", () => set({ typing: true }));
     socket.on("user-stop-typing", () => set({ typing: false }));
+
+    socket.on("message-deleted-everyone", ({ messageId }: { messageId: string }) => {
+      set((state) => ({
+        messages: state.messages.filter((m) => m._id !== messageId),
+      }));
+    });
   },
 }));

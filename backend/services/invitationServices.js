@@ -1,5 +1,6 @@
 import Invitation from "../models/Invitation.js";
 import User from "../models/User.js";
+import { deleteCache } from "./cacheService.js";
 
 // get invite by id
 export const getInviteById = async (invitationId) => {
@@ -67,6 +68,13 @@ export const respondInviteService = async (invitationId, status) => {
 
         await sender.save();
         await receiver.save();
+
+        // Invalidate friends cache for both users since friend lists changed
+        await deleteCache(`friends:${sender._id.toString()}`);
+        await deleteCache(`friends:${receiver._id.toString()}`);
+        // Also invalidate user cache since friends array changed
+        await deleteCache(`user:${sender._id.toString()}`);
+        await deleteCache(`user:${receiver._id.toString()}`);
     }
 
     return invite;

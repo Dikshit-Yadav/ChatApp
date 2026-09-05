@@ -25,7 +25,7 @@ export interface Conversation {
 }
 
 // message
-export type FileType = "image" | "video" | "audio" | "document";
+export type FileType = "image" | "video" | "audio" | "document" | "other";
 
 export interface MessageFile {
   url?: string;
@@ -36,13 +36,20 @@ export interface MessageFile {
 
 export type MessageStatus = "sent" | "delivered" | "seen";
 
+export interface Reaction {
+  userId: string | User;
+  emoji: string;
+}
+
 export interface Message {
   _id?: string;
   conversationId: string;
   senderId: string | User;
   message?: string;
   file?: MessageFile;
+  files?: MessageFile[];
   status?: MessageStatus;
+  reactions: Reaction[];
   deletedFor?: string[];
   deletedForEveryone?: boolean;
   createdAt?: string;

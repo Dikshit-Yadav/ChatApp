@@ -2,14 +2,26 @@ import User from "../models/User.js";
 import Invitation from "../models/Invitation.js";
 import Conversation from "../models/Conversation.js";
 import mongoose from "mongoose";
+import { getCache, setCache, deleteCache } from "./cacheService.js";
 
-//me
+//me — Redis cached
 export const getUserById = async (userId) => {
-    return await User.findById(userId).select("-password");
+    const cacheKey = `user:${userId}`;
+    const cached = await getCache(cacheKey);
+    if (cached) return cached;
+
+    const user = await User.findById(userId).select("-password");
+
+    if (user) {
+        // Cache for 10 minutes
+        await setCache(cacheKey, user, 600);
+    }
+
+    return user;
 };
 
 
-// search users
+// search users — NOT cached (dynamic, low frequency)
 export const searchUserService = async (search, userId) => {
     if (!search) throw new Error("Search query is required");
 
@@ -44,13 +56,17 @@ export const searchUserService = async (search, userId) => {
     }));
 };
 
-// get friends
+// get friends — Redis cached
 export const getFriendsService = async (userId) => {
+    const cacheKey = `friends:${userId}`;
+    const cached = await getCache(cacheKey);
+    if (cached) return cached;
+
     const user = await User.findById(userId).populate(
         "friends",
         "username email profilePic"
     );
-    const objectId =new mongoose.Types.ObjectId(userId);
+    const objectId = new mongoose.Types.ObjectId(userId);
     const conversations = await Conversation.find({ members: objectId })
         .populate({
             path: "lastMessage",
@@ -58,7 +74,7 @@ export const getFriendsService = async (userId) => {
         })
         .select("_id members lastMessage");
 
-   const formattedConversations = conversations.map(conv => ({
+    const formattedConversations = conversations.map(conv => ({
         conversationId: conv._id,
         members: conv.members.map(m => m.toString()),
         lastMessage: conv.lastMessage ? conv.lastMessage.message : null
@@ -66,14 +82,18 @@ export const getFriendsService = async (userId) => {
 
     if (!user) throw new Error("User not found");
 
-     return {
+    const result = {
         friends: user.friends,
         conversations: formattedConversations
     };
-    // return user.friends;
+
+    // Cache for 5 minutes
+    await setCache(cacheKey, result, 300);
+
+    return result;
 };
 
-// get suggestions
+// get suggestions — NOT cached (dynamic results)
 export const getSuggestionsService = async (userId) => {
     const user = await User.findById(userId);
     if (!user) throw new Error("User not found");

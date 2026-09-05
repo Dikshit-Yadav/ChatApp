@@ -12,10 +12,12 @@ interface GroupChatState {
   setGroup: (group: Conversation | null) => void;
   fetchMessages: (groupId: string) => Promise<void>;
   sendMessage: (text: string) => void;
+  sendFileMessage: (files: File[], text?: string) => Promise<boolean>;
   receiveMessage: (msg: Message) => void;
   removeMember: (groupId: string, memberId: string) => Promise<void>;
   deleteGroup: (groupId: string) => Promise<void>;
   renameGroup: (groupId: string, name: string) => Promise<Conversation | null>;
+  toggleReaction: (messageId: string, emoji: string) => Promise<void>;
 }
 
 export const useGroupChatStore = create<GroupChatState>((set, get) => ({
@@ -55,6 +57,27 @@ export const useGroupChatStore = create<GroupChatState>((set, get) => ({
       conversationId: group._id,
       message: text,
     });
+  },
+
+  sendFileMessage: async (files, text = "") => {
+    const { group } = get();
+    if (!group || files.length === 0) return false;
+
+    try {
+      const formData = new FormData();
+      files.forEach((file) => {
+        formData.append("files", file);
+      });
+      if (text) {
+        formData.append("text", text);
+      }
+
+      const res = await conversationApi.sendFileMessage(group._id, formData);
+      return true;
+    } catch (err: any) {
+      console.error("Error uploading file in group", err);
+      return false;
+    }
   },
 
   receiveMessage: (msg) => {
@@ -105,4 +128,30 @@ export const useGroupChatStore = create<GroupChatState>((set, get) => ({
       return null;
     }
   },
+
+  toggleReaction: async (messageId, emoji) => {
+    try {
+      const res = await conversationApi.toggleReaction(messageId, emoji);
+      const updatedMsg = res.data;
+
+      set((state) => ({
+        messages: state.messages.map((msg) =>
+          msg._id === messageId ? updatedMsg : msg
+        ),
+      }));
+    } catch (err) {
+      console.error("Error toggling reaction", err);
+    }
+  },
 }));
+
+socket.on("message-reaction-updated", (updatedMsg: Message) => {
+  useGroupChatStore.setState((state) => {
+    if (state.group?._id === updatedMsg.conversationId) {
+      return {
+        messages: state.messages.map((m) => (m._id === updatedMsg._id ? updatedMsg : m)),
+      };
+    }
+    return state;
+  });
+});

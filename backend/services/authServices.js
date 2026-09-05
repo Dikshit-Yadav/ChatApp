@@ -1,16 +1,27 @@
 import User from "../models/User.js";
 import bcrypt from "bcrypt";
 import { sendEmail } from "../utils/sendMail.js";
-
-const otpStore = new Map();
+import { getCache, setCache, deleteCache } from "./cacheService.js";
 
 // register
 export const registerUser = async ({ username, email, phone, password }) => {
     const existingUser = await User.findOne({ email });
     if (existingUser) throw new Error("User already exists");
 
-    if (!password || password.length < 6) {
-        throw new Error("Password must be at least 6 characters");
+    if (!password || password.length < 8) {
+        throw new Error("Password must be at least 8 characters long");
+    }
+    if (!/[A-Z]/.test(password)) {
+        throw new Error("Password must include at least one uppercase letter");
+    }
+    if (!/[a-z]/.test(password)) {
+        throw new Error("Password must include at least one lowercase letter");
+    }
+    if (!/\d/.test(password)) {
+        throw new Error("Password must include at least one number");
+    }
+    if (!/[@$!%*?&^#()[\]{}\-_=+|\\:;"'<>,./~`]/.test(password)) {
+        throw new Error("Password must include at least one special character");
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -36,22 +47,23 @@ export const loginUser = async ({ email, password }) => {
     return user;
 };
 
-// send registration otp
+// send registration otp — stored in Redis with 5-min TTL
 export const sendOtpService = async (email) => {
     const user = await User.findOne({ email });
     if (user) throw new Error("User already exists");
 
-    const existing = otpStore.get(email);
+    const existing = await getCache(`otp:${email}`);
     if (existing && Date.now() < existing.expiresAt) {
         throw new Error("OTP already sent. Please wait before requesting again");
     }
 
     const otp = String(Math.floor(100000 + Math.random() * 900000));
-    console.log(otp)
-    otpStore.set(email, {
+    console.log(otp);
+
+    await setCache(`otp:${email}`, {
         otp,
         expiresAt: Date.now() + 5 * 60 * 1000,
-    });
+    }, 300); // 5 minutes TTL
 
     await sendEmail(
         email,
@@ -62,14 +74,14 @@ export const sendOtpService = async (email) => {
     return true;
 };
 
-// verify otp
+// verify otp — reads from Redis and deletes on success
 export const verifyOtpService = async (email, otp) => {
-    const record = otpStore.get(email);
+    const record = await getCache(`otp:${email}`);
 
     if (!record) throw new Error("No OTP found");
 
     if (Date.now() > record.expiresAt) {
-        otpStore.delete(email);
+        await deleteCache(`otp:${email}`);
         throw new Error("OTP expired");
     }
 
@@ -77,26 +89,26 @@ export const verifyOtpService = async (email, otp) => {
         throw new Error("Invalid OTP");
     }
 
-    otpStore.delete(email);
+    await deleteCache(`otp:${email}`);
     return true;
 };
 
-// send forgot password otp
+// send forgot password otp — stored in Redis
 export const sendForgetOtpService = async (email) => {
     const user = await User.findOne({ email });
     if (!user) throw new Error("No account found with this email");
 
-    const existing = otpStore.get(email);
+    const existing = await getCache(`otp:${email}`);
     if (existing && Date.now() < existing.expiresAt) {
         throw new Error("OTP already sent. Please wait before requesting again");
     }
 
     const otp = String(Math.floor(100000 + Math.random() * 900000));
 
-    otpStore.set(email, {
+    await setCache(`otp:${email}`, {
         otp,
         expiresAt: Date.now() + 5 * 60 * 1000,
-    });
+    }, 300); // 5 minutes TTL
 
     await sendEmail(
         email,
@@ -109,8 +121,21 @@ export const sendForgetOtpService = async (email) => {
 
 // reset password
 export const resetPasswordService = async (email, password) => {
-    if (!password || password.length < 6) {
-        throw new Error("Password must be at least 6 characters");
+
+    if (!password || password.length < 8) {
+        throw new Error("Password must be at least 8 characters long");
+    }
+    if (!/[A-Z]/.test(password)) {
+        throw new Error("Password must include at least one uppercase letter");
+    }
+    if (!/[a-z]/.test(password)) {
+        throw new Error("Password must include at least one lowercase letter");
+    }
+    if (!/\d/.test(password)) {
+        throw new Error("Password must include at least one number");
+    }
+    if (!/[@$!%*?&^#()[\]{}\-_=+|\\:;"'<>,./~`]/.test(password)) {
+        throw new Error("Password must include at least one special character");
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);

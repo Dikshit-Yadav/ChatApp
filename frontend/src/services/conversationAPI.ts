@@ -34,6 +34,15 @@ export const conversationApi = {
     });
   },
 
+  //delete msg
+  deleteMessageForEveryone: async (messageId: string) => {
+    return api.delete(`${API_ENDPOINTS.MESSAGES.BASE}/delete/${messageId}`);
+  },
+  deleteMessageForMe: async (messageId: string) => {
+    return api.delete(`${API_ENDPOINTS.MESSAGES.BASE}/delete/me/${messageId}`);
+  },
+
+
   //send msgs
   sendMessage: async (
     conversationId: string,
@@ -44,7 +53,22 @@ export const conversationApi = {
       message
     );
   },
-
+  sendFileMessage: async (conversationId: string, formData: FormData) => {
+    return api.post(
+      `${API_ENDPOINTS.MESSAGES.BASE}/upload/${conversationId}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+  },
+  toggleReaction: async (messageId: string, emoji: string) => {
+    return api.post(`${API_ENDPOINTS.MESSAGES.BASE}/react/${messageId}`, {
+      emoji,
+    });
+  },
 
   // GROUP CHAT
 
@@ -60,11 +84,11 @@ export const conversationApi = {
   getGroup: async (conversationId: string) => {
     return api.get(API_ENDPOINTS.CONVERSATION.GET_GROUP(conversationId));
   },
-    getGroups: async () => {
+  getGroups: async () => {
     return api.get(API_ENDPOINTS.CONVERSATION.GET_GROUPS);
   },
   // update groupname
- renameGroup: async (conversationId: string, groupName: string) => {
+  renameGroup: async (conversationId: string, groupName: string) => {
     return api.put(
       API_ENDPOINTS.CONVERSATION.UPDATE_GROUP(conversationId),
       { groupName }
@@ -72,7 +96,7 @@ export const conversationApi = {
   },
 
   // delete group
-   deleteGroup: async (conversationId: string) => {
+  deleteGroup: async (conversationId: string) => {
     return api.delete(
       API_ENDPOINTS.CONVERSATION.DELETE_GROUP(conversationId)
     );

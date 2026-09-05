@@ -1,108 +1,145 @@
-const onlineUsers = new Map();
+import redisClient from "../config/redisClient.js";
 import Message from "../models/Message.js";
 
-export const initSocket = (io) => {
-  io.on("connection", (socket) => {
-    const user = socket.request.session?.user;
+const ONLINE_USERS_KEY = "online-users";
 
-    if (!user) {
-      console.log("Unauthorized socket, disconnecting...");
-      return socket.disconnect(true);
+// Redis Hash helpers for online users
+const addOnlineSocket = async (userId, socketId) => {
+    const existing = await redisClient.hget(ONLINE_USERS_KEY, userId);
+    const sockets = existing ? JSON.parse(existing) : [];
+    if (!sockets.includes(socketId)) {
+        sockets.push(socketId);
     }
+    await redisClient.hset(ONLINE_USERS_KEY, userId, JSON.stringify(sockets));
+};
 
-    const userId = user.id.toString();
-    console.log("User connected:", userId, socket.id);
+const removeOnlineSocket = async (userId, socketId) => {
+    const existing = await redisClient.hget(ONLINE_USERS_KEY, userId);
+    if (!existing) return;
+    const sockets = JSON.parse(existing).filter((id) => id !== socketId);
+    if (sockets.length > 0) {
+        await redisClient.hset(ONLINE_USERS_KEY, userId, JSON.stringify(sockets));
+    } else {
+        await redisClient.hdel(ONLINE_USERS_KEY, userId);
+    }
+};
 
-    //  STORE MULTIPLE SOCKETS
-    const existingSockets = onlineUsers.get(userId) || [];
-    onlineUsers.set(userId, [...existingSockets, socket.id]);
+const getAllOnlineUserIds = async () => {
+    const keys = await redisClient.hkeys(ONLINE_USERS_KEY);
+    return keys;
+};
 
-    //  EMIT ONLINE USERS
-    io.emit("online-users", Array.from(onlineUsers.keys()));
+const getUserSockets = async (userId) => {
+    const data = await redisClient.hget(ONLINE_USERS_KEY, userId.toString());
+    return data ? JSON.parse(data) : [];
+};
 
-    //  JOIN CONVERSATION (GROUP + PRIVATE)
-    socket.on("join-conversation", ({ conversationId }) => {
-      socket.join(conversationId);
-      console.log(`${userId} joined ${conversationId}`);
-    });
+export const initSocket = (io) => {
+    io.on("connection", async (socket) => {
+        const user = socket.request.session?.user;
 
-    socket.on("leave-conversation", ({ conversationId }) => {
-      socket.leave(conversationId);
-    });
+        if (!user) {
+            console.log("Unauthorized socket, disconnecting...");
+            return socket.disconnect(true);
+        }
 
-    //  SEND MESSAGE (GROUP READY)
-    socket.on("send-message", async ({ conversationId, message }) => {
-      try {
-        const newMessage = await Message.create({
-          senderId: userId,
-          conversationId,
-          message,
+        const userId = (user._id || user.id).toString();
+        console.log("User connected:", userId, socket.id);
+
+        // STORE SOCKET IN REDIS
+        await addOnlineSocket(userId, socket.id);
+
+        // EMIT ONLINE USERS
+        const onlineUserIds = await getAllOnlineUserIds();
+        io.emit("online-users", onlineUserIds);
+
+        // ALLOW CLIENT TO REQUEST CURRENT ONLINE LIST (Sync fix)
+        socket.on("get-online-users", async () => {
+            const users = await getAllOnlineUserIds();
+            socket.emit("online-users", users);
         });
 
-        const populatedMsg = await newMessage.populate(
-          "senderId",
-          "username profilePic"
-        );
+        // JOIN CONVERSATION (GROUP + PRIVATE)
+        socket.on("join-conversation", ({ conversationId }) => {
+            socket.join(conversationId);
+            console.log(`${userId} joined ${conversationId}`);
+        });
 
-        io.to(conversationId).emit("receive-message", 
-          populatedMsg
-        );
-      } catch (err) {
-        console.log("Message error:", err.message);
-      }
+        socket.on("leave-conversation", ({ conversationId }) => {
+            socket.leave(conversationId);
+        });
+
+        // SEND MESSAGE (GROUP READY)
+        socket.on("send-message", async ({ conversationId, message }) => {
+            try {
+                const newMessage = await Message.create({
+                    senderId: userId,
+                    conversationId,
+                    message,
+                });
+
+                const populatedMsg = await newMessage.populate(
+                    "senderId",
+                    "username profilePic"
+                );
+
+                io.to(conversationId).emit("receive-message",
+                    populatedMsg
+                );
+            } catch (err) {
+                console.log("Message error:", err.message);
+            }
+        });
+
+        // DELETE MESSAGE EVERYONE BROADCAST
+        socket.on("delete-message-everyone", ({ conversationId, messageId }) => {
+            io.to(conversationId).emit("message-deleted-everyone", {
+                messageId,
+            });
+        });
+
+        // GROUP INVITE REAL-TIME
+        socket.on("send-group-invite", async ({ receiverId, invite }) => {
+            const sockets = await getUserSockets(receiverId);
+
+            sockets.forEach((sockId) => {
+                io.to(sockId).emit("group-invite", invite);
+            });
+        });
+
+        // TYPING
+        socket.on("typing", ({ conversationId }) => {
+            socket.to(conversationId).emit("user-typing", {
+                userId,
+            });
+        });
+
+        socket.on("stop-typing", ({ conversationId }) => {
+            socket.to(conversationId).emit("user-stop-typing", {
+                userId,
+            });
+        });
+
+        // DISCONNECT
+        socket.on("disconnect", async () => {
+            console.log("User disconnected:", userId);
+
+            await removeOnlineSocket(userId, socket.id);
+
+            const onlineUserIds = await getAllOnlineUserIds();
+            io.emit("online-users", onlineUserIds);
+        });
     });
-
-    //  GROUP INVITE REAL-TIME
-    socket.on("send-group-invite", ({ receiverId, invite }) => {
-      const sockets = onlineUsers.get(receiverId) || [];
-
-      sockets.forEach((sockId) => {
-        io.to(sockId).emit("group-invite", invite);
-      });
-    });
-
-    //  TYPING
-    socket.on("typing", ({ conversationId }) => {
-      socket.to(conversationId).emit("user-typing", {
-        userId,
-      });
-    });
-
-    socket.on("stop-typing", ({ conversationId }) => {
-      socket.to(conversationId).emit("user-stop-typing", {
-        userId,
-      });
-    });
-
-    //  DISCONNECT
-    socket.on("disconnect", () => {
-      console.log("User disconnected:", userId);
-
-      const sockets =
-        (onlineUsers.get(userId) || []).filter((id) => id !== socket.id);
-
-      if (sockets.length > 0) {
-        onlineUsers.set(userId, sockets);
-      } else {
-        onlineUsers.delete(userId);
-      }
-
-      io.emit("online-users", Array.from(onlineUsers.keys()));
-    });
-  });
 };
 
 
-//  HELPERS (FIXED)
+// HELPERS
 
-//  REMOVE THIS (single socket)
-// export const getReceiverSocket = (userId) => ...
-
-//  USE THIS
-export const getReceiverSockets = (userId) => {
-  return onlineUsers.get(userId.toString()) || [];
+// USE THIS — reads from Redis
+export const getReceiverSockets = async (userId) => {
+    return await getUserSockets(userId);
 };
 
-export const getOnlineUsers = () => {
-  return Array.from(onlineUsers.keys());
+export const getOnlineUsers = async () => {
+    return await getAllOnlineUserIds();
 };

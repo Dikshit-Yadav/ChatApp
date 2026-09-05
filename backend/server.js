@@ -7,6 +7,7 @@ import connectDB from "./config/db.js";
 import "./config/password.js";
 import { initSocket } from "./socket/index.js";
 import sessionMiddleware from "./middleware/session.js";
+import "./config/redisClient.js";
 let io;
 
 connectDB();

@@ -12,12 +12,13 @@ import GroupSidebar from "../components/GroupSidebar";
 import GroupChat from "../components/GroupChat";
 import CreateGroupModel from "../components/CreateGroupModel";
 import AddMemberModel from "../components/AddMemberModel.tsx";
+import type { Conversation } from "../types/type.ts"
+
 
 export default function ChatPage() {
-  const [selectedGroup, setSelectedGroup] = useState<any>(null);
-  const [showCreate, setShowCreate] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState<Conversation | null>(null);
+  const [groups, setGroups] = useState<Conversation[]>([]); const [showCreate, setShowCreate] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
-  const [groups, setGroups] = useState([]);
 
 
   useEffect(() => {
@@ -39,7 +40,8 @@ export default function ChatPage() {
   useEffect(() => {
     const fetchGroups = async () => {
       const res = await conversationApi.getConversations();
-      const groupChats = res.data.conversations?.filter((c: any) => c.isGroup) || [];
+      const conversations: Conversation[] = res.data.conversations || [];
+       const groupChats = conversations.filter((c) => c.isGroup);
       setGroups(groupChats);
     };
 
@@ -105,18 +107,18 @@ export default function ChatPage() {
               <GroupChat
                 group={selectedGroup}
                 onInvite={() => setShowInvite(true)}
-                onGroupUpdate={(updated) => {
+                onGroupUpdate={(updated: Conversation | null) => {
                   if (!updated) {
                     setSelectedGroup(null);
-                    setGroups((prev: any) =>
-                      prev.filter((g: any) => g._id !== selectedGroup?._id)
+                    setGroups((prev) =>
+                      prev.filter((g) => g._id !== selectedGroup?._id)
                     );
                     return;
                   }
 
                   setSelectedGroup(updated);
-                  setGroups((prev: any) =>
-                    prev?.map((g: any) =>
+                  setGroups((prev) =>
+                    prev?.map((g) =>
                       g._id === updated._id ? updated : g
                     )
                   );
